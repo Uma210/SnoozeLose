@@ -325,6 +325,38 @@ input::placeholder { color: var(--muted); }
   background: var(--ocean-art) center / 100% 100% no-repeat;
   content: "";
 }
+.water-motion {
+  grid-area: 1 / 1 / 3 / -1;
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+}
+.water-motion::before,
+.water-motion::after { position: absolute; content: ""; }
+.water-motion::before {
+  inset: 28% -96px auto;
+  height: 4%;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 11px, #a8ecff98 11px 35px, transparent 35px 96px) left 42% / 100% 1px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 56px, #d8f4ff81 56px 73px, transparent 73px 96px) left 72% / 100% 2px no-repeat,
+    linear-gradient(transparent, #55c8ef41 46%, transparent);
+  animation: surface-current 4.2s linear infinite;
+}
+.water-motion::after {
+  inset: 30% -16% 0;
+  background: repeating-linear-gradient(110deg,
+    transparent 0 11%, #74e5ff2e 13%, #41c8ff10 17%, transparent 20% 31%);
+  -webkit-mask-image: linear-gradient(#000, #0008 46%, transparent 95%);
+  mask-image: linear-gradient(#000, #0008 46%, transparent 95%);
+  animation: underwater-light 10s ease-in-out infinite alternate;
+}
+@keyframes surface-current {
+  to { transform: translateX(-96px); }
+}
+@keyframes underwater-light {
+  from { transform: translateX(-4%); opacity: .48; }
+  to { transform: translateX(6%); opacity: .9; }
+}
 .dive-hud {
   grid-area: 1 / 1 / 2 / -1;
   z-index: 2;
@@ -363,6 +395,7 @@ input::placeholder { color: var(--muted); }
 .ocean-depth {
   grid-area: 1 / 2 / 3 / 3;
   position: relative;
+  z-index: 1;
   pointer-events: none;
 }
 .depth-track { position: absolute; inset: 29.5% clamp(.7rem, 4vw, 2.6rem) 14%; }
@@ -489,6 +522,8 @@ input::placeholder { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .vehicle,
   .swimmer,
+  .water-motion::before,
+  .water-motion::after,
   .depth-marker.descending .swimmer,
   .depth-marker.descending .swim-bubble,
   .depth-marker.descending + .surface-ripple { animation: none; }
@@ -520,6 +555,7 @@ input::placeholder { color: var(--muted); }
       <div class="hangar" aria-hidden="true"><div class="vehicle"></div></div>
     </section>
     <section class="ocean-screen hide" id="game" aria-label="Dive in progress">
+      <div class="water-motion" aria-hidden="true"></div>
       <div class="dive-hud">
         <div class="top"><span id="mode">Standard<span class="tag" id="qn"></span></span><span>Score <b id="score">0</b></span></div>
         <div class="depth-caption">Echo depth <strong id="echo-depth">Surface</strong></div>
