@@ -41,7 +41,7 @@
         };
         A10000000000000000000004 /* Krillion */ = {
             isa = PBXGroup;
-            children = (A10000000000000000000007, A10000000000000000000008, A10000000000000000000009);
+            children = (A10000000000000000000007, A10000000000000000000017, A10000000000000000000008, A10000000000000000000009);
             path = Krillion;
             sourceTree = "<group>";
         };
@@ -83,7 +83,7 @@
         A1000000000000000000000D = {
             isa = PBXSourcesBuildPhase;
             buildActionMask = 2147483647;
-            files = (A1000000000000000000000A);
+            files = (A1000000000000000000000A, A10000000000000000000018);
             runOnlyForDeploymentPostprocessing = 0;
         };
         A1000000000000000000000E = {
@@ -102,7 +102,7 @@
             isa = XCBuildConfiguration;
             buildSettings = {
                 CLANG_ENABLE_MODULES = YES;
-                IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+                IPHONEOS_DEPLOYMENT_TARGET = 15.4;
                 SDKROOT = iphoneos;
                 SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
                 SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -113,7 +113,7 @@
             isa = XCBuildConfiguration;
             buildSettings = {
                 CLANG_ENABLE_MODULES = YES;
-                IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+                IPHONEOS_DEPLOYMENT_TARGET = 15.4;
                 SDKROOT = iphoneos;
                 SWIFT_COMPILATION_MODE = wholemodule;
             };
@@ -148,6 +148,16 @@
             lastKnownFileType = text.xcconfig;
             path = App.xcconfig;
             sourceTree = SOURCE_ROOT;
+        };
+        A10000000000000000000017 /* KrillionView.swift */ = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            path = KrillionView.swift;
+            sourceTree = "<group>";
+        };
+        A10000000000000000000018 /* KrillionView.swift in Sources */ = {
+            isa = PBXBuildFile;
+            fileRef = A10000000000000000000017;
         };
     };
     rootObject = A10000000000000000000001;
