@@ -1,10 +1,16 @@
 const words = new Set(require('./words.json'));
-const WORD_LENGTH = 5;
 const MAX_GUESSES = 6;
 const RANK = { absent: 1, present: 2, exact: 3 };
 
 function isWord(value) {
   return typeof value === 'string' && words.has(value);
+}
+
+function pickUnusedWord(excluded) {
+  const used = new Set(excluded);
+  const available = [...words].filter((word) => !used.has(word));
+  if (available.length === 0) throw new Error('All puzzle words have already been used.');
+  return available[Math.floor(Math.random() * available.length)];
 }
 
 function scoreGuess(guess, answer) {
@@ -38,4 +44,4 @@ function keyboardMarks(guesses, answer) {
   return keys;
 }
 
-module.exports = { isWord, scoreGuess, keyboardMarks, WORD_LENGTH, MAX_GUESSES };
+module.exports = { isWord, pickUnusedWord, scoreGuess, keyboardMarks, MAX_GUESSES };

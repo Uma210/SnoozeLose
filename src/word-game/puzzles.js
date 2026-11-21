@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isWord } from './rules';
+import { isWord, pickUnusedWord } from './rules';
+
+export { pickUnusedWord as selectDatabaseWord };
 
 const PREFIX = 'snoozelose:word:v1:';
 export const SAMPLE_PUZZLE_ID = 'preview:sample';
@@ -41,16 +43,4 @@ export function prepareWordPuzzle(occurrenceId, generateWord) {
 
 export function saveWordPuzzle(puzzle) {
   return AsyncStorage.setItem(keyFor(puzzle.occurrenceId), JSON.stringify(puzzle));
-}
-
-export async function requestAiWord(excluded) {
-  const baseUrl = process.env.EXPO_PUBLIC_WORD_API_URL;
-  if (!baseUrl) throw new Error('The word generation service is not configured.');
-  const response = await fetch(baseUrl.replace(/\/$/, '') + '/word-puzzles', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ excluded }),
-  });
-  if (!response.ok) throw new Error('Could not prepare a word puzzle. Try again.');
-  return (await response.json()).word;
 }
