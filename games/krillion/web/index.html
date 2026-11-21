@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Krillion</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#12233a;--mute:#5d6f86;--acc:#0e7c86;--acc2:#e4572e;--ok:#1b8a4b;--line:#d6dee9;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1624;--card:#13243a;--ink:#e8f0fa;--mute:#93a6bf;--acc:#3cc7d2;--acc2:#ff7a52;--ok:#4cd58a;--line:#25405f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b1624;--card:#13243a;--ink:#e8f0fa;--mute:#93a6bf;--acc:#3cc7d2;--acc2:#ff7a52;--ok:#4cd58a;--line:#25405f;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;display:flex;justify-content:center;padding:20px}
+.wrap{width:100%;max-width:520px}
+h1{margin:0;font-size:28px;letter-spacing:-.5px}h1 span{color:var(--acc)}
+.sub{color:var(--mute);margin:4px 0 18px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.top{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-bottom:10px}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;width:100%;background:var(--acc)}.bar i.low{background:var(--acc2)}
+.q{font-size:22px;font-weight:650;margin:6px 0 16px;min-height:56px}
+.row{display:flex;gap:8px}
+input{flex:1;font:inherit;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
+input:focus{outline:2px solid var(--acc);border-color:transparent}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18px;background:var(--acc);color:#04222a;cursor:pointer}
+button.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.5;cursor:default}
+.fb{min-height:48px;margin-top:14px;font-size:15px}
+.echo{color:var(--ok);font-weight:700}.miss{color:var(--acc2);font-weight:700}
+.pips{display:flex;gap:6px;margin-top:14px;align-items:center;font-size:13px;color:var(--mute)}
+.pip{width:12px;height:12px;border-radius:50%;border:2px solid var(--acc2)}.pip.on{background:var(--acc2)}
+.big{font-size:54px;font-weight:800;color:var(--acc);margin:6px 0}
+.list{margin:12px 0 0;padding:0;list-style:none;font-size:14px}
+.list li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--mute);margin-left:6px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}.hide{display:none}
+.restart{width:min(420px,calc(100% - 40px));color:var(--ink)}
+.restart::backdrop{background:rgba(5,12,22,.6)}
+.restart h2{margin:0 0 8px}.restart p{color:var(--mute);margin:0 0 16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Krill<span>ion</span></h1>
+  <p class="sub">Seven prompts. Twenty seconds each. The rarer your answer, the more it’s worth.</p>
+  <div class="card" id="start">
+    <p style="margin-top:0">Each prompt is a category with, sometimes, one simple twist (like a starting letter). A valid answer is an <b>echo</b>. Common answers score 3–6. The rarest can score up to 100.</p>
+    <p>After three misses, restart your dive. In Standard mode, you can switch to simpler prompts.</p>
+    <button id="go">Start dive</button>
+  </div>
+  <div class="card hide" id="game">
+    <div class="top"><span id="mode">Standard<span class="tag" id="qn"></span></span><span>Score: <b id="score">0</b></span></div>
+    <div class="bar"><i id="tbar"></i></div>
+    <div class="q" id="q"></div>
+    <div class="row"><input id="ans" autocomplete="off" autocapitalize="off" placeholder="Your answer…"><button id="sub">Echo</button></div>
+    <div class="fb" id="fb" role="status"></div>
+    <div class="pips"><span id="miss-count">Misses: 0</span><span class="pip" id="p1" aria-hidden="true"></span><span class="pip" id="p2" aria-hidden="true"></span><span class="pip" id="p3" aria-hidden="true"></span></div>
+  </div>
+  <div class="card hide" id="end">
+    <div style="color:var(--mute)">Dive complete</div>
+    <div class="big" id="final">0</div>
+    <div id="sum" style="color:var(--mute)"></div>
+    <ul class="list" id="log"></ul>
+    <div class="btns" style="margin-top:16px"><button id="again">New dive</button><button class="alt" id="simple">Simpler prompts</button></div>
+  </div>
+</div>
+<dialog class="card restart" id="restart" aria-labelledby="restart-title" aria-describedby="restart-description">
+  <h2 id="restart-title">Restart this dive?</h2>
+  <p id="restart-description">You’ve missed three prompts.</p>
+  <form class="btns" method="dialog">
+    <button id="restart-same" value="same" autofocus>Restart at same difficulty</button>
+    <button class="alt" id="restart-easier" value="easy">Restart with simpler prompts</button>
+  </form>
+</dialog>
+
+<script>
+/* Answer pools: "name/alias:points". Rarer = more points. */
+const POOLS={
+fruit:"apple:3,banana:3,orange:4,grape:5,strawberry:5,watermelon:8,mango:8,pear:10,peach:10,pineapple:10,cherry:10,lemon:12,kiwi:15,plum:20,papaya:30,pomegranate:35,fig:40,lychee:50,guava:50,persimmon:80",
+veg:"carrot:3,potato:3,tomato:5,broccoli:5,onion:6,spinach:8,cucumber:8,lettuce:8,pepper:10,bean:12,cabbage:12,kale:15,corn:15,pea:20,beet:35,radish:35,turnip:50,leek:55,artichoke:70,kohlrabi:98",
+animal:"dog:3,cat:3,bear:4,lion:4,tiger:4,horse:4,elephant:5,kangaroo:5,koala:6,wolf:6,hippo:8,deer:8,duck:8,frog:8,turtle:8,hamster:10,goat:10,crab:10,bat:10,bee:12,seal:12,hawk:15,hare:20,bison:20,buffalo:20,toucan:20,hyena:20,swan:15,orca:25,beaver:25,tortoise:25,badger:30,tarantula:35,boar:30,toad:30,lynx:35,mole:40,baboon:40,trout:40,heron:50,tapir:60,newt:60,ibis:70,tern:80,kingfisher:50,hedgehog:15,hummingbird:35,kudu:85",
+cheese:"cheddar:3,mozzarella:4,parmesan:6,swiss:8,brie:10,gouda:12,feta:12,provolone:25,blue:30,gruyere:35,camembert:35,halloumi:35,gorgonzola:45,manchego:50,havarti:50,roquefort:65",
+pasta:"spaghetti:3,lasagna:4,macaroni:6,penne:8,fettuccine:10,ravioli:12,fusilli:15,linguine:20,rigatoni:20,tortellini:25,orzo:30,farfalle:30,gnocchi:35,orecchiette:60,pappardelle:60,bucatini:65,cavatappi:90",
+candy:"snickers:3,mms/m&ms:4,skittles:4,twix:5,kitkat:5,reeses:6,twizzlers:10,hersheys:10,starburst:12,milky way:12,haribo:20,nerds:25,toblerone:25,butterfinger:25,jolly rancher:30,swedish fish:35,mentos:35",
+dip:"guacamole:4,salsa:4,hummus:5,ranch:10,queso:15,onion dip:25,spinach dip:20,tzatziki:25,baba ganoush:50,tahini:60",
+sauce:"ketchup:3,mustard:4,mayo/mayonnaise:4,bbq/barbecue:6,ranch:8,hot:8,soy:10,sriracha:12,pesto:15,salsa:15,gravy:20,teriyaki:25,alfredo:25,tartar:30,aioli:35,hollandaise:50,worcestershire:50,hoisin:55",
+topping:"pepperoni:3,cheese:3,mushroom:5,sausage:6,onion:8,olive:8,bacon:8,pineapple:10,pepper:10,ham:12,chicken:15,spinach:20,anchovy:25,basil:25,jalapeno:30,artichoke:55,arugula:60",
+soda:"coke/coca cola:3,pepsi:3,sprite:5,fanta:6,dr pepper:6,mountain dew:8,7up/7 up:10,root beer:12,sunkist:40,mug:50,fresca:60,irn bru:75",
+color:"red:3,blue:3,green:4,yellow:5,purple:6,orange:6,pink:8,black:4,white:4,brown:8,gray/grey:10,teal:30,gold:20,silver:20,turquoise:40,maroon:50,magenta:55",
+head:"eye:3,nose:3,mouth:3,ear:4,hair:4,forehead:8,chin:10,cheek:10,lip:12,jaw:15,eyebrow:15,tongue:20,tooth/teeth:8,temple:30,eyelid:45,nostril:50",
+low:"leg:3,knee:3,foot/feet:4,toe:5,thigh:6,ankle:6,hip:8,calf:12,shin:15,heel:18,hamstring:35,achilles:45,arch:55,bunion:90",
+sky:"sun:3,moon:3,cloud:4,star:4,rainbow:8,lightning:12,planet:25,aurora:30,meteor:35,comet:40,eclipse:45,contrail:80",
+sting:"bee:3,wasp:4,scorpion:5,jellyfish:8,hornet:10,stingray:15,ant:25,fire ant:30,sea anemone/anemone:60,urchin:80",
+cone:"ice cream cone/ice cream:3,traffic cone:4,party hat:15,funnel:25,volcano:30,teepee/tipi:40,witch hat:45,pine tree:60,megaphone:65",
+helmet:"football:3,hockey:3,baseball:8,cycling/biking:8,racing:20,lacrosse:25,skiing:25,skateboarding:30,cricket:30,climbing:40,bobsled:60",
+ese:"chinese:3,japanese:3,portuguese:12,vietnamese:20,maltese:60,taiwanese:45,burmese:70,nepalese:65,javanese:80",
+ish:"spanish:3,english:3,swedish:10,polish:10,danish:12,turkish:12,irish:20,finnish:20,scottish:45,yiddish:70,flemish:85",
+country:"usa/america/united states:3,china:3,canada:4,brazil:4,mexico:4,spain:4,italy:4,india:4,sweden:8,switzerland:8,belgium:12,bolivia:22,bulgaria:30,bangladesh:25,bahamas:35,belize:55,benin:70,bhutan:60,botswana:50,chile:15,colombia:12,cuba:12,croatia:25,cyprus:45,cameroon:35,chad:60,comoros:90,mongolia:30,morocco:12,malaysia:25,malta:40,madagascar:30,mali:45,mozambique:50,monaco:70,moldova:75,singapore:20,serbia:30,somalia:35,senegal:35,sudan:30,slovakia:55,slovenia:60,syria:30,suriname:85,ireland:8,iran:12,iraq:12,israel:12,indonesia:15,iceland:20,egypt:5,germany:4,france:3,japan:3,russia:4,kenya:8,nigeria:6,ghana:10,ethiopia:10,tanzania:15,namibia:35,peru:15,argentina:8,portugal:8,greece:8,norway:12,finland:15,denmark:12,poland:10,uganda:20,yemen:30,gabon:70,guinea:55,guatemala:25,georgia:25,haiti:35,honduras:35,jamaica:15,jordan:15,laos:40,latvia:50,lebanon:20,libya:30,nepal:20,niger:40,oman:45,panama:20,qatar:25,romania:25,rwanda:35,togo:70,tonga:80,tunisia:25,turkey:6,ukraine:10,uruguay:30,vietnam:8,zambia:30,zimbabwe:30",
+capital:"paris:3,london:3,rome:4,madrid:5,berlin:5,amsterdam:15,lisbon:12,vienna:12,athens:12,dublin:12,stockholm:15,oslo:20,warsaw:20,prague:20,budapest:20,brussels:20,helsinki:25,copenhagen:25,bucharest:35,belgrade:40,bratislava:55,bern:55,tallinn:70,valletta:90,vaduz:98"
+};
+Object.assign(POOLS,{
+bread:"white:3,sourdough:6,baguette:6,bagel:10,rye:10,naan:12,pita:12,ciabatta:20,focaccia:25,brioche:25,cornbread:25,challah:45,pumpernickel:55,injera:80",
+soup:"tomato:3,chicken noodle/chicken:4,ramen:12,chowder/clam chowder:10,minestrone:15,miso:15,pho:15,onion:20,lentil:30,gazpacho:35,borscht:40,bisque:50,goulash:60",
+icecream:"vanilla:3,chocolate:3,strawberry:4,mint chip/mint:8,cookie dough:10,cookies and cream:12,pistachio:20,coffee:20,rocky road:20,neapolitan:25,butter pecan:30,mango:35,rum raisin:70",
+spice:"salt:3,pepper:3,cinnamon:5,paprika:8,garlic:8,cumin:10,oregano:10,ginger:12,basil:12,turmeric:15,nutmeg:15,cloves:25,saffron:30,cardamom:35,sumac:70",
+instrument:"guitar:3,piano:3,violin:5,drums:5,flute:8,trumpet:8,saxophone:10,cello:12,clarinet:15,harp:20,trombone:20,oboe:25,banjo:25,bassoon:35,sitar:45,theremin:70",
+tree:"oak:3,pine:3,maple:4,palm:6,birch:10,willow:12,cedar:12,elm:20,sequoia:25,redwood:25,aspen:30,cypress:35,baobab:55",
+bird:"eagle:3,owl:3,parrot:4,penguin:4,duck:5,robin:6,crow:8,hawk:10,sparrow:10,flamingo:12,peacock:12,swan:15,pelican:20,cardinal:25,woodpecker:30,puffin:40,kiwi:45,hoopoe:90",
+sea:"shark:3,dolphin:3,whale:3,octopus:5,jellyfish:6,seahorse:8,crab:8,squid:10,starfish/sea star:10,seal:12,orca:12,turtle:12,lobster:15,manatee:25,walrus:30,narwhal:35",
+furniture:"chair:3,table:3,bed:3,couch/sofa:4,desk:6,bookshelf/shelf:8,stool:12,dresser:15,bench:20,wardrobe:25,ottoman:40,armoire:70,credenza:90",
+subject:"math:3,science:4,english:4,history:5,art:8,music:8,geography:10,chemistry:12,biology:12,physics:15,gym/pe:15,drama:25,economics:45,latin:70",
+appliance:"oven:3,microwave:3,fridge/refrigerator:3,toaster:5,stove:6,blender:6,dishwasher:8,kettle:10,mixer:20,air fryer:20,food processor:30,rice cooker:30,waffle iron:40,juicer:40",
+winter:"coat:3,scarf:3,gloves:4,hat:5,boots:6,sweater:6,jacket:6,mittens:10,beanie:12,parka:25,earmuffs:30,snow pants:45,long johns:65,balaclava:70",
+dessert:"cake:3,pie:4,cookie:4,brownie:5,cheesecake:8,donut:8,cupcake:10,pudding:12,tiramisu:15,flan:30,baklava:35,macaron:35,cannoli:40,churros:45,mochi:60,panna cotta:70",
+vehicle:"car:3,truck:3,bus:4,bike/bicycle:4,train:4,plane/airplane:4,boat:5,motorcycle:6,helicopter:8,scooter:10,tractor:20,ambulance:25,tram:30,segway:55,rickshaw:70",
+flower:"rose:3,tulip:4,daisy:4,sunflower:5,lily:8,orchid:10,daffodil:12,lavender:15,poppy:20,peony:30,lotus:35,hibiscus:35,iris:40,marigold:45,zinnia:90",
+breakfast:"eggs/egg:3,bacon:3,pancake:3,cereal:4,toast:5,waffle:6,oatmeal:8,yogurt:10,sausage:10,bagel:12,omelette:12,muffin:15,french toast:20,hash brown:20,croissant:25,granola:25,grits:45,porridge:50",
+shape:"circle:3,square:3,triangle:3,rectangle:5,oval:8,star:8,heart:10,diamond:12,pentagon:15,hexagon:15,octagon:20,crescent:30,trapezoid:35,rhombus:45,parallelogram:55"
+});
+const DB={};for(const k in POOLS)DB[k]=POOLS[k].split(",").map(s=>{const i=s.lastIndexOf(":");return{n:s.slice(0,i).split("/"),p:+s.slice(i+1)}});
+/* Prompts: [text, pool, filter(s|h|n), arg, level]  level 1 = simple (plain category) */
+const PROMPTS=[
+["Name a fruit","fruit","","",1],["Name a vegetable","veg","","",1],["Name an animal","animal","","",1],["Name a color","color","","",1],
+["Name a type of cheese","cheese","","",1],["Name a candy or chocolate","candy","","",1],["Name a pizza topping","topping","","",1],
+["Name a part of the human head","head","","",1],["Name something you can see in the sky","sky","","",1],["Name a part of the body below the waist","low","","",1],
+["Name a country that starts with B","country","s","b",2],["Name a country that starts with C","country","s","c",2],["Name a country that starts with M","country","s","m",2],
+["Name a country that starts with S","country","s","s",2],["Name a country that starts with I","country","s","i",2],["Name a country with the letter G in its name","country","h","g",2],
+["Name a European capital city that starts with B","capital","s","b",2],["Name a European capital city","capital","","",2],
+["Name an animal that starts with B","animal","s","b",2],["Name an animal that starts with T","animal","s","t",2],["Name an animal that starts with H","animal","s","h",2],["Name an animal whose name is exactly four letters long","animal","n",4,2],
+["Name a fruit that starts with P","fruit","s","p",2],["Name an animal that stings","sting","","",2],["Name a pasta shape","pasta","","",2],["Name a dip","dip","","",2],["Name a sauce","sauce","","",2],
+["Name a soda brand","soda","","",2],["Name something shaped like a cone","cone","","",2],["Name a sport where competitors wear helmets","helmet","","",2],
+["Name a language ending in -ese","ese","","",2],["Name a language ending in -ish","ish","","",2],
+["Name a type of bread","bread","","",1],["Name a soup","soup","","",1],["Name an ice cream flavor","icecream","","",1],["Name a herb or spice","spice","","",1],
+["Name a musical instrument","instrument","","",1],["Name a type of tree","tree","","",1],["Name a bird","bird","","",1],["Name a sea animal","sea","","",1],
+["Name a piece of furniture","furniture","","",1],["Name a school subject","subject","","",1],["Name a kitchen appliance","appliance","","",1],["Name an item of winter clothing","winter","","",1],
+["Name a dessert","dessert","","",1],["Name a vehicle","vehicle","","",1],["Name a flower","flower","","",1],["Name a breakfast food","breakfast","","",1],["Name a shape","shape","","",1],["Name a soda or soft drink brand","soda","","",1]
+];
+/* Auto-generate letter prompts for every pool/letter pair with at least 3 valid answers */
+[["country","a country"],["animal","an animal"],["fruit","a fruit"],["veg","a vegetable"],["capital","a European capital city"],["candy","a candy or chocolate"],["bird","a bird"],["dessert","a dessert"],["flower","a flower"],["instrument","a musical instrument"],["tree","a type of tree"],["breakfast","a breakfast food"],["sea","a sea animal"],["spice","a herb or spice"]].forEach(([pool,label])=>{
+  "abcdefghijklmnopqrstuvwxyz".split("").forEach(L=>{
+    const pr=["Name "+label+" that starts with "+L.toUpperCase(),pool,"s",L,2];
+    if(valid(pr).length>=3&&!PROMPTS.some(p=>p[0]===pr[0]))PROMPTS.push(pr);
+  });
+});
+/* Bank expansion: every pool x (starts with / contains / ends with / exact length) twist, kept only when at least 3 answers qualify */
+const LBL={fruit:"a fruit",veg:"a vegetable",animal:"an animal",cheese:"a type of cheese",pasta:"a pasta shape",candy:"a candy or chocolate",dip:"a dip",sauce:"a sauce",topping:"a pizza topping",soda:"a soda brand",color:"a color",head:"a part of the human head",low:"a part of the body below the waist",sky:"something you can see in the sky",sting:"an animal that stings",cone:"something shaped like a cone",helmet:"a sport where competitors wear helmets",country:"a country",capital:"a European capital city",bread:"a type of bread",soup:"a soup",icecream:"an ice cream flavor",spice:"a herb or spice",instrument:"a musical instrument",tree:"a type of tree",bird:"a bird",sea:"a sea animal",furniture:"a piece of furniture",subject:"a school subject",appliance:"a kitchen appliance",winter:"an item of winter clothing",dessert:"a dessert",vehicle:"a vehicle",flower:"a flower",breakfast:"a breakfast food",shape:"a shape"};
+Object.keys(LBL).forEach(pool=>{
+  const n=DB[pool].length;
+  const add=(t,ft,arg)=>{const pr=[t,pool,ft,arg,2],v=valid(pr).length;if(v>=3&&v<n&&!PROMPTS.some(p=>p[0]===t))PROMPTS.push(pr)};
+  "abcdefghijklmnopqrstuvwxyz".split("").forEach(L=>{const U=L.toUpperCase();
+    add("Name "+LBL[pool]+" that starts with "+U,"s",L);
+    add("Name "+LBL[pool]+" with the letter "+U+" in its name","h",L);
+    add("Name "+LBL[pool]+" whose name ends in "+U,"e",L);
+    add("Name "+LBL[pool]+" without the letter "+U+" in its name","x",L)});
+  for(let k=3;k<=12;k++)add("Name "+LBL[pool]+" whose name is exactly "+k+" letters long","n",k);
+});
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const norm=s=>s.toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9 ]/g,"").replace(/ and /g,"&").replace(/^(the|a|an) /,"").replace(/ sauce$| dip$|cheese$/,"").trim();
+const clean=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/^(the|a|an) /,"").replace(/ (sauce|dip|cheese)$/,"").replace(/\s+/g," ").trim();
+function valid(pr){
+  const [,pool,ft,arg]=pr;
+  return DB[pool].filter(e=>{const c=e.n[0].replace(/[^a-z ]/g,"");
+    if(ft==="s")return c[0]===arg; if(ft==="h")return c.includes(arg); if(ft==="e")return c.endsWith(arg); if(ft==="x")return !c.includes(arg); if(ft==="n")return c.replace(/ /g,"").length===arg; return true;});
+}
+/* Remember which prompts the player has already seen (across visits when storage is available) */
+const SK = "krill_seen_v2";
+const BANKS = [1, 2].map(level => PROMPTS.filter(prompt => prompt[4] === level && valid(prompt).length >= 3));
+const PROMPT_TEXTS = new Set(BANKS.flat().map(prompt => prompt[0]));
+const seen = new Set();
+try {
+  const saved = JSON.parse(localStorage.getItem(SK) || "[]");
+  if (Array.isArray(saved)) {
+    saved.filter(text => PROMPT_TEXTS.has(text)).forEach(text => seen.add(text));
+  }
+} catch (e) {
+  // A blocked or invalid store leaves the current page's history available.
+}
+function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+function pick(level, shown) {
+  const bank = BANKS[level - 1];
+  let fresh = bank.filter(prompt => !seen.has(prompt[0]));
+  if (fresh.length === 0) {
+    bank.forEach(prompt => seen.delete(prompt[0]));
+    fresh = bank;
+  }
+
+  const usedCategories = new Set(shown.map(prompt => prompt[1]));
+  const candidates = shuffle(fresh.filter(prompt => !shown.includes(prompt)));
+  const prompt = candidates.find(candidate => !usedCategories.has(candidate[1])) || candidates[0];
+  seen.add(prompt[0]);
+  try {
+    localStorage.setItem(SK, JSON.stringify([...seen]));
+  } catch (e) {
+    // Keep recording prompts in memory while storage is unavailable.
+  }
+  return prompt;
+}
+let set,mode,i,score,misses,log,t,timer,locked;
+const TIME=20000;
+const DIVE_LENGTH = 7;
+function start(m){
+  mode=m;set=[];i=0;score=0;misses=0;log=[];
+  $("start").classList.add("hide");$("end").classList.add("hide");$("game").classList.remove("hide");
+  $("mode").firstChild.textContent=m==="easy"?"Simpler prompts":"Standard";$("score").textContent=0;pips();next();
+}
+function pips(){
+  $("miss-count").textContent = "Misses: " + misses;
+  $("p1").classList.toggle("on", misses >= 1);
+  $("p2").classList.toggle("on", misses >= 2);
+  $("p3").classList.toggle("on", misses >= 3);
+}
+function next(){
+  if(i>=DIVE_LENGTH)return finish();
+  set.push(pick(mode === "easy" ? 1 : 2, set));
+  locked=false;$("qn").textContent=(i+1)+"/"+DIVE_LENGTH;$("q").textContent=set[i][0];$("fb").textContent="";
+  $("ans").value="";$("ans").disabled=false;$("sub").disabled=false;$("ans").focus();t=Date.now();clearInterval(timer);timer=setInterval(tick,100);tick();
+}
+function tick(){const left=Math.max(0,TIME-(Date.now()-t));$("tbar").style.width=(left/TIME*100)+"%";$("tbar").classList.toggle("low",left<6000);if(left<=0&&!locked)resolve("")}
+function resolve(raw){
+  if(locked)return;locked=true;clearInterval(timer);$("ans").disabled=true;$("sub").disabled=true;
+  const a=clean(raw),a2=a.replace(/s$/,"");
+  const hit=a&&valid(set[i]).find(e=>e.n.some(x=>{const y=clean(x);return y===a||y===a2||y.replace(/s$/,"")===a}));
+  if(hit){
+    score+=hit.p;$("score").textContent=score;
+    const tier=hit.p>=50?"Legendary":hit.p>=20?"Rare":hit.p>=7?"Uncommon":"Common";
+    $("fb").innerHTML='<span class="echo">Echo!</span> +'+hit.p+" points · "+tier;log.push([set[i][0],raw.trim(),hit.p]);
+  }else{
+    misses++;pips();const ex=valid(set[i]).slice().sort((x,y)=>x.p-y.p)[0];
+    $("fb").innerHTML='<span class="miss">No echo.</span> '+(raw.trim()?"“"+esc(raw.trim())+"” didn’t register.":"Time’s up.")+" Try something like “"+ex.n[0]+"”.";
+    log.push([set[i][0],raw.trim()||"—",0]);
+  }
+  i++;
+  setTimeout(misses === 3 ? offerRestart : next, 1500);
+}
+function offerRestart(){
+  const simpler = mode === "easy";
+  $("restart-same").textContent = simpler ? "Restart dive" : "Restart at same difficulty";
+  $("restart-easier").hidden = simpler;
+  $("restart").showModal();
+}
+function finish(){
+  clearInterval(timer);$("game").classList.add("hide");$("end").classList.remove("hide");$("final").textContent=score;
+  const e=log.filter(l=>l[2]>0).length;$("sum").textContent=e+" of "+log.length+" echoes · "+(mode==="easy"?"simpler prompts":"standard prompts");
+  $("log").innerHTML=log.map(l=>"<li><span>"+esc(l[0])+" → <b>"+esc(l[1])+"</b></span><span>"+(l[2]?"+"+l[2]:"✗")+"</span></li>").join("");
+}
+$("go").onclick=()=>start("standard");$("again").onclick=()=>start("standard");$("simple").onclick=()=>start("easy");
+$("sub").onclick=()=>resolve($("ans").value);
+$("ans").addEventListener("keydown",e=>{if(e.key==="Enter")resolve($("ans").value)});
+$("restart").addEventListener("cancel", event => event.preventDefault());
+$("restart").addEventListener("close", () => start($("restart").returnValue === "easy" ? "easy" : mode));
+</script>
+</body>
+</html>
