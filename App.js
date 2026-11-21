@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import WordPuzzleScreen from './src/word-game/WordPuzzleScreen';
-import { loadWordPuzzle, prepareWordPuzzle, requestAiWord, SAMPLE_PUZZLE_ID, saveWordPuzzle } from './src/word-game/puzzles';
+import { loadWordPuzzle, prepareWordPuzzle, selectDatabaseWord, SAMPLE_PUZZLE_ID, saveWordPuzzle } from './src/word-game/puzzles';
 
 export default function App() {
   const [current, setCurrent] = useState(null);
@@ -14,9 +14,9 @@ export default function App() {
     setPending(true);
     setError('');
     try {
-      const id = useAi ? `preview:ai:${Date.now()}` : SAMPLE_PUZZLE_ID;
+      const id = useAi ? `preview:word:${Date.now()}` : SAMPLE_PUZZLE_ID;
       if (useAi) {
-        await prepareWordPuzzle(id, requestAiWord);
+        await prepareWordPuzzle(id, selectDatabaseWord);
       } else {
         const sample = await loadWordPuzzle(id);
         if (!sample || sample.guesses.includes(sample.answer)) {
@@ -46,7 +46,7 @@ export default function App() {
             {!solved && (
               <>
                 <PreviewButton label="Play sample puzzle" disabled={pending} onPress={() => start(false)} />
-                <PreviewButton label={pending ? 'Preparing…' : 'Generate with AI'} disabled={pending} onPress={() => start(true)} />
+                <PreviewButton label={pending ? 'Preparing…' : 'Play a new puzzle'} disabled={pending} onPress={() => start(true)} />
               </>
             )}
             {!!error && <Text accessibilityRole="alert" style={styles.copy}>{error}</Text>}

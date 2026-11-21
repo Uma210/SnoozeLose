@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { keyboardMarks, isWord, scoreGuess, MAX_GUESSES, WORD_LENGTH } from './rules';
+import { keyboardMarks, isWord, scoreGuess, MAX_GUESSES } from './rules';
 import { loadWordPuzzle, saveWordPuzzle } from './puzzles';
 
 const KEYS = ['QWERTYUIOP'.split(''), 'ASDFGHJKL'.split(''), ['Enter', ...'ZXCVBNM', 'Delete']];
@@ -20,7 +20,9 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
   const [completionError, setCompletionError] = useState(false);
   const busy = useRef(false);
   const { width, height } = useWindowDimensions();
-  const tile = Math.min(53, Math.floor((width - 64) / 5), Math.max(34, Math.floor((height - 315) / 6)));
+  const wordLength = puzzle?.answer.length ?? 5;
+  const boardWidth = width - 28 - (wordLength - 1) * 5;
+  const tile = Math.min(53, Math.floor(boardWidth / wordLength), Math.max(34, Math.floor((height - 315) / MAX_GUESSES)));
   const solved = Boolean(puzzle?.guesses.includes(puzzle.answer));
   const exhausted = puzzle?.guesses.length === MAX_GUESSES && !solved;
 
@@ -81,8 +83,8 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
   function handleKey(key) {
     if (busy.current || solved || exhausted) return;
     if (key === 'Enter') {
-      if (draft.length !== WORD_LENGTH) {
-        setMessage('Enter five letters.');
+      if (draft.length !== wordLength) {
+        setMessage(`Enter ${wordLength} letters.`);
       } else if (!isWord(draft)) {
         setMessage('That word is not in the puzzle dictionary.');
       } else {
@@ -91,7 +93,7 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
       return;
     }
     setMessage('');
-    setDraft((value) => key === 'Delete' ? value.slice(0, -1) : (value + key.toLowerCase()).slice(0, WORD_LENGTH));
+    setDraft((value) => key === 'Delete' ? value.slice(0, -1) : (value + key.toLowerCase()).slice(0, wordLength));
   }
 
   const marks = puzzle ? keyboardMarks(puzzle.guesses, puzzle.answer) : {};
@@ -105,7 +107,7 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
           {alarmTime ? <Text style={styles.time}>{alarmTime}</Text> : null}
         </View>
         <Text accessibilityRole="header" style={styles.title}>{alarmTime ? 'Solve to stop alarm' : 'Guess the word'}</Text>
-        <Text style={styles.instructions}>Find the five-letter word in six guesses.</Text>
+        {puzzle && <Text style={styles.instructions}>Find the {wordLength}-letter word in six guesses.</Text>}
         {loading && <ActivityIndicator color="#6A5ACD" style={styles.loading} />}
         {!puzzle && !loading && <Text accessibilityRole="alert" style={styles.status}>{message}</Text>}
         {puzzle && (
@@ -117,7 +119,7 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
                 const letters = guess ?? (row === puzzle.guesses.length && !solved ? draft : '');
                 return (
                   <View key={row} style={styles.tiles}>
-                    {Array.from({ length: WORD_LENGTH }, (_, col) => {
+                    {Array.from({ length: wordLength }, (_, col) => {
                       const mark = rowMarks[col];
                       const letter = letters[col]?.toUpperCase();
                       return (
