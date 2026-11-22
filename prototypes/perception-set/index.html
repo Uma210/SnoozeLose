@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e7eef7">
+<title>SnoozeLose — Perception Challenge</title>
+</head>
+<body>
+﻿<div id="iphone-perception-preview">
+  <style>
+    #iphone-perception-preview {
+      color: #edf2eb;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #iphone-perception-preview .stage { display: flex; justify-content: center; padding: 10px; }
+    #iphone-perception-preview .phone {
+      position: relative; width: min(100%, 393px); aspect-ratio: 393 / 852; overflow: hidden;
+      border: 7px solid #070d14; border-radius: 43px; background: #101b29; box-shadow: 0 20px 65px #0005;
+    }
+    #iphone-perception-preview .screen {
+      position: absolute; inset: 0; display: flex; flex-direction: column; padding: 38px 15px 19px;
+      background: radial-gradient(ellipse at 80% 4%, #1c3442 0, transparent 38%), #101b29;
+    }
+    #iphone-perception-preview .island {
+      position: absolute; z-index: 2; top: 8px; left: 50%; width: 96px; height: 25px;
+      transform: translateX(-50%); border-radius: 18px; background: #05090d;
+    }
+    #iphone-perception-preview .statusbar {
+      display: flex; justify-content: space-between; align-items: center; min-height: 18px;
+      margin-bottom: 11px; color: #edf2eb; font-size: 12px; font-weight: 600;
+    }
+    #iphone-perception-preview .system-icons { font-size: 10px; letter-spacing: .04em; }
+    #iphone-perception-preview .brand { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 800; letter-spacing: -.04em; }
+    #iphone-perception-preview .brand-mark {
+      width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px;
+      background: #c5ed83; color: #17251d; font-size: 16px;
+    }
+    #iphone-perception-preview .progress { display: flex; gap: 5px; margin: 15px 0 17px; }
+    #iphone-perception-preview .progress span { height: 4px; flex: 1; border-radius: 8px; background: #ffffff1b; }
+    #iphone-perception-preview .progress span.done { background: #c5ed83; }
+    #iphone-perception-preview .content { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+    #iphone-perception-preview .content::-webkit-scrollbar { display: none; }
+    #iphone-perception-preview .round { color: #c5ed83; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .13em; text-transform: uppercase; }
+    #iphone-perception-preview h1 { margin: 7px 0 6px; color: #edf2eb; font-size: 27px; line-height: 1.05; letter-spacing: -.045em; }
+    #iphone-perception-preview .description { margin: 0 0 14px; color: #b7c2be; font-size: 12px; line-height: 1.45; }
+    #iphone-perception-preview .card {
+      padding: 14px; border: 1px solid #ffffff14; border-radius: 18px;
+      background: linear-gradient(140deg, #1c2d3c, #182635); box-shadow: 0 18px 45px #0002;
+    }
+    #iphone-perception-preview .card-label { color: #9aa9a7; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .1em; }
+    #iphone-perception-preview .timer-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    #iphone-perception-preview .timer { color: #ff8b72; font: 20px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    #iphone-perception-preview .dot-field {
+      position: relative; height: 180px; overflow: hidden; margin-bottom: 12px;
+      border-radius: 14px; background: #111e2a;
+    }
+    #iphone-perception-preview .dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #c5ed83; box-shadow: 0 1px 7px #c5ed8355; }
+    #iphone-perception-preview .dot.coral { background: #ff8b72; }
+    #iphone-perception-preview .dot.blue { background: #8cc9df; }
+    #iphone-perception-preview .label { margin: 0 0 6px; color: #9aa9a7; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .1em; }
+    #iphone-perception-preview .answer-row { display: flex; gap: 7px; }
+    #iphone-perception-preview input {
+      min-width: 0; height: 43px; flex: 1; padding: 0 11px; border: 1px solid #455967; border-radius: 10px;
+      outline: none; background: #0f1b27; color: #edf2eb; font: 16px ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    #iphone-perception-preview input:focus { border-color: #c5ed83; }
+    #iphone-perception-preview button {
+      min-height: 43px; padding: 0 12px; border: 0; border-radius: 10px; background: #c5ed83;
+      color: #17251d; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    #iphone-perception-preview button:disabled { opacity: .55; cursor: default; }
+    #iphone-perception-preview .hint { min-height: 30px; margin: 9px 0 0; color: #9aa9a7; font-size: 10px; line-height: 1.4; }
+    #iphone-perception-preview .arena { overflow: hidden; border-radius: 14px; background: #111e2a; }
+    #iphone-perception-preview canvas { display: block; width: 100%; height: 200px; touch-action: none; }
+    #iphone-perception-preview .arena-hint { margin: 8px 0 0; color: #9aa9a7; text-align: center; font-size: 10px; }
+    #iphone-perception-preview .prompt { margin: 0 0 13px; padding: 13px; border-radius: 12px; background: #111e2a; }
+    #iphone-perception-preview .prompt-main { margin-top: 6px; font-size: 17px; font-weight: 700; line-height: 1.3; }
+    #iphone-perception-preview .line-area { padding: 40px 9px 21px; touch-action: none; }
+    #iphone-perception-preview .line { position: relative; height: 5px; border-radius: 8px; background: #85959b; cursor: crosshair; }
+    #iphone-perception-preview .line:before, #iphone-perception-preview .line:after {
+      position: absolute; top: -6px; width: 3px; height: 17px; border-radius: 4px; background: #edf2eb; content: "";
+    }
+    #iphone-perception-preview .line:before { left: 0; }
+    #iphone-perception-preview .line:after { right: 0; }
+    #iphone-perception-preview .marker {
+      position: absolute; top: 50%; width: 20px; height: 20px; border: 3px solid #c5ed83;
+      border-radius: 50%; background: #101b29; transform: translate(-50%, -50%);
+    }
+    #iphone-perception-preview .ends { display: flex; justify-content: space-between; margin-top: 12px; color: #9aa9a7; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    #iphone-perception-preview .result-score { margin: 8px 0 4px; color: #c5ed83; font-size: 49px; font-weight: 800; letter-spacing: -.07em; }
+    #iphone-perception-preview .result-score small { color: #9aa9a7; font-size: 14px; font-weight: 500; letter-spacing: 0; }
+    #iphone-perception-preview .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 13px 0; }
+    #iphone-perception-preview .score-cell { padding: 10px; border-radius: 10px; background: #111e2a; }
+    #iphone-perception-preview .score-cell span { display: block; color: #9aa9a7; font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    #iphone-perception-preview .score-cell b { display: block; margin-top: 4px; font-size: 19px; }
+    #iphone-perception-preview .footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-top: 11px; color: #9aa9a7; font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .05em; }
+    #iphone-perception-preview .home-indicator { width: 108px; height: 4px; flex: 0 0 auto; align-self: center; margin-top: 10px; border-radius: 8px; background: #edf2eb; opacity: .8; }
+    #iphone-perception-preview .home-actions { display: grid; gap: 9px; margin-top: 16px; }
+    @media (max-width: 360px) {
+      #iphone-perception-preview .screen { padding-right: 12px; padding-left: 12px; }
+      #iphone-perception-preview .dot-field { height: 158px; }
+      #iphone-perception-preview canvas { height: 180px; }
+      #iphone-perception-preview h1 { font-size: 24px; }
+      #iphone-perception-preview .card { padding: 12px; }
+    }
+    /* tidalBYTE-inspired visual treatment: cool portal blues, ink typography, soft cards */
+    #iphone-perception-preview { color: #202b3a; font-family: "Courier New", ui-monospace, monospace; }
+    #iphone-perception-preview .phone { border-color: #1c293a; background: #e7eef7; box-shadow: 0 22px 70px #172d4933; }
+    #iphone-perception-preview .screen { background: radial-gradient(ellipse at 80% 4%, #ffffff 0, transparent 42%), linear-gradient(145deg,#e2ebf7,#eef4fb 60%,#e7f6f5); color:#202b3a; }
+    #iphone-perception-preview .statusbar { color:#273447; }
+    #iphone-perception-preview .brand { color:#273447; font-family:"Courier New",monospace; letter-spacing:-.06em; }
+    #iphone-perception-preview .brand-mark { background:#dce7f3; color:#24344a; border:1px solid #c5d5e9; border-radius:9px; font-size:18px; }
+    #iphone-perception-preview .progress span { background:#27344720; }
+    #iphone-perception-preview .progress span.done { background:#226859; }
+    #iphone-perception-preview .round { color:#226859; font-weight:700; }
+    #iphone-perception-preview h1 { color:#202b3a; font-family:"Courier New",monospace; letter-spacing:-.06em; }
+    #iphone-perception-preview .description { color:#526174; }
+    #iphone-perception-preview .card { border:1px solid #cbd8e7; border-radius:19px; background:linear-gradient(135deg,#fff,#f3f8fc); box-shadow:0 5px 0 #bdcbd9,0 15px 32px #18314a10; }
+    #iphone-perception-preview .card-label, #iphone-perception-preview .label, #iphone-perception-preview .hint, #iphone-perception-preview .arena-hint, #iphone-perception-preview .footer { color:#647387; }
+    #iphone-perception-preview .timer { color:#267360; }
+    #iphone-perception-preview .dot-field, #iphone-perception-preview .arena, #iphone-perception-preview .prompt, #iphone-perception-preview .score-cell { background:#e4eef6; }
+    #iphone-perception-preview .dot { background:#267360; box-shadow:0 1px 7px #26736055; }
+    #iphone-perception-preview .dot.coral { background:#ed8f79; }
+    #iphone-perception-preview .dot.blue { background:#78aec6; }
+    #iphone-perception-preview input { border-color:#c3d1df; background:#fff; color:#202b3a; }
+    #iphone-perception-preview input:focus { border-color:#267360; }
+    #iphone-perception-preview button { background:#226859; color:#fff; border-radius:11px; box-shadow:0 3px 0 #174a40; }
+    #iphone-perception-preview button:disabled { box-shadow:none; }
+    #iphone-perception-preview .line { background:#91a7ba; }
+    #iphone-perception-preview .line:before, #iphone-perception-preview .line:after { background:#43566c; }
+    #iphone-perception-preview .marker { border-color:#226859; background:#fff; }
+    #iphone-perception-preview .result-score { color:#226859; }
+    #iphone-perception-preview .result-score small, #iphone-perception-preview .score-cell span { color:#647387; }
+    #iphone-perception-preview .home-indicator { background:#25344a; }
+  
+    /* Higher contrast for supporting text while preserving the portal palette */
+    #iphone-perception-preview .card-label, #iphone-perception-preview .label, #iphone-perception-preview .hint, #iphone-perception-preview .arena-hint, #iphone-perception-preview .footer, #iphone-perception-preview .ends, #iphone-perception-preview .result-score small, #iphone-perception-preview .score-cell span { color:#394b60; }
+    #iphone-perception-preview .description { color:#3d4d61; }
+    #iphone-perception-preview .timer { color:#185a4c; }
+
+    #iphone-perception-preview .prompt-main { color:#27384d; }
+    #iphone-perception-preview .round { color:#185a4c; }
+
+    #iphone-perception-preview .inline-results { margin-top:12px; padding-top:10px; border-top:1px solid #cbd8e7; }
+    #iphone-perception-preview .inline-feedback h1 { margin:4px 0; font-size:19px; }
+    #iphone-perception-preview .inline-feedback .description { margin:2px 0 7px; font-size:11px; }
+    #iphone-perception-preview .inline-feedback .result-score { margin:2px 0; font-size:36px; }
+    #iphone-perception-preview .inline-feedback .hint { margin:3px 0 0; }
+    #iphone-perception-preview .position-card { margin-top:10px; padding:12px; }
+    #iphone-perception-preview .position-track { position:relative; height:44px; margin:17px 7px 9px; border-top:3px solid #91a7ba; }
+    #iphone-perception-preview .position-pin { position:absolute; top:-8px; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; white-space:nowrap; }
+    #iphone-perception-preview .position-pin i { width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px currentColor; }
+    #iphone-perception-preview .target-pin { color:#c45c49; }
+    #iphone-perception-preview .target-pin i { background:#c45c49; }
+    #iphone-perception-preview .your-pin { color:#185a4c; top:7px; }
+    #iphone-perception-preview .your-pin i { background:#185a4c; }
+    #iphone-perception-preview .position-pin b { margin-top:4px; font:700 8px "Courier New",monospace; }
+    #iphone-perception-preview .position-values { display:flex; justify-content:space-between; gap:8px; color:#31445a; font:700 9px "Courier New",monospace; }
+    #iphone-perception-preview .ray-legend { display:flex; justify-content:center; gap:16px; margin:3px 0 8px; color:#31445a; font:700 9px "Courier New",monospace; }
+    #iphone-perception-preview .ray-legend span { display:inline-flex; align-items:center; gap:5px; }
+    #iphone-perception-preview .ray-legend i { width:12px; height:3px; display:inline-block; border-radius:3px; }
+    #iphone-perception-preview .ray-legend .target-key { background:#c45c49; }
+    #iphone-perception-preview .ray-legend .your-key { background:#185a4c; }
+    #iphone-perception-preview .angle-reveal { display:block; width:150px; height:150px; margin:4px auto 8px; overflow:visible; }
+    #iphone-perception-preview .angle-reveal path { fill:none; stroke:#9aabbc; stroke-width:1.5; }
+    #iphone-perception-preview .angle-reveal .target-ray { stroke:#c45c49; stroke-width:4; }
+    #iphone-perception-preview .angle-reveal .your-ray { stroke:#185a4c; stroke-width:4; }
+    #iphone-perception-preview .angle-reveal circle { fill:#27384d; }
+    #iphone-perception-preview .score-cell b { color:#202b3a; }
+    #iphone-perception-preview .score-cell span { color:#31445a; }
+
+</style>
+  <section class="stage">
+    <div class="phone" role="application" aria-label="Playable SnoozeLose perception challenge in iPhone portrait layout">
+      <div class="island" aria-hidden="true"></div>
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="system-icons">5G  •••</span></div>
+        <header class="brand"><span class="brand-mark" aria-hidden="true">🐧</span><span>SnoozeLose</span></header>
+        <div class="progress" id="pp-progress" role="img" aria-label="Four-game progress"></div>
+        <main class="content" id="pp-content"></main>
+        <div class="home-indicator" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+  <script>
+    (() => {
+      const root = document.getElementById('iphone-perception-preview');
+      const content = root.querySelector('#pp-content');
+      const progress = root.querySelector('#pp-progress');
+      let scores = [];
+      let round = 0;
+      let phase = 'home';
+      let timer = null;
+      let animation = 0;
+      let answer = 0;
+      let chosen = null;
+      let targetAngle = 0;
+      let angle = 0;
+      const fractionPrompts = [
+        { label: '20%', pct: 20 }, { label: '1/8', pct: 12.5 }, { label: '1/7', pct: 100 / 7 },
+        { label: '1/6', pct: 100 / 6 }, { label: '1/5', pct: 20 }, { label: '1/4', pct: 25 },
+        { label: '2/7', pct: 200 / 7 }, { label: '3/10', pct: 30 }, { label: '1/3', pct: 100 / 3 },
+        { label: '3/8', pct: 37.5 }, { label: '2/5', pct: 40 }, { label: '3/7', pct: 300 / 7 },
+        { label: '1/2', pct: 50 }, { label: '4/7', pct: 400 / 7 }, { label: '5/8', pct: 62.5 },
+        { label: '2/3', pct: 200 / 3 }, { label: '5/7', pct: 500 / 7 }, { label: '7/10', pct: 70 },
+        { label: '3/4', pct: 75 }, { label: '4/5', pct: 80 }, { label: '6/7', pct: 600 / 7 },
+        { label: '7/8', pct: 87.5 }, { label: '9/10', pct: 90 }, { label: '80%', pct: 80 }
+      ];
+      function stopMotion() {
+        if (timer) clearInterval(timer);
+        timer = null;
+        if (animation) cancelAnimationFrame(animation);
+        animation = 0;
+      }
+      function updateProgress() {
+        progress.innerHTML = '';
+        for (let i = 0; i < 4; i++) {
+          const bar = document.createElement('span');
+          if (i <= round && phase !== 'home' && phase !== 'finished') bar.classList.add('done');
+          if (phase === 'finished') bar.classList.add('done');
+          progress.append(bar);
+        }
+        progress.setAttribute('aria-label', phase === 'home' ? 'Ready to start' : phase === 'finished' ? 'Set complete' : 'Round ' + (round + 1) + ' of 4');
+      }
+      function startSet() {
+        stopMotion();
+        scores = [];
+        round = 0;
+        phase = 'question';
+        showRound();
+      }
+      function showRound() {
+        stopMotion();
+        phase = 'question';
+        chosen = null;
+        updateProgress();
+        if (round === 0) showCount();
+        else if (round === 1) showTrack();
+        else if (round === 2) showAngle();
+        else showSplit();
+      }
+      function finishRound(score, detail, reveal = '', inline = false) {
+        stopMotion();
+        const points = Math.max(0, Math.min(100, Math.round(score)));
+        scores.push(points);
+        phase = 'feedback';
+        updateProgress();
+        const feedback = '<div class="inline-feedback"><div class="round">ROUND 0' + (round + 1) + ' COMPLETE</div><h1>Nice estimate.</h1><p class="description">' + detail + '</p><div class="card-label">ROUND SCORE</div><div class="result-score">' + points + '<small> / 100</small></div><p class="hint">Your score is added to the four-round average.</p></div>' + reveal + '<div class="home-actions"><button type="button" data-action="next">' + (round === 3 ? 'See my results' : 'Next game') + ' →</button></div>';
+        if (inline) { const gameCard = content.querySelector('.card'); gameCard.insertAdjacentHTML('beforeend', '<div class="inline-results">' + feedback + '</div>'); content.querySelectorAll('canvas, .line').forEach(el => { el.style.pointerEvents = 'none'; }); content.querySelectorAll('button[data-action=lock-angle]').forEach(el => { el.disabled = true; }); }
+        else content.innerHTML = feedback;
+      }
+      function showCount() {
+        answer = 36 + Math.floor(Math.random() * 35);
+        content.innerHTML = '<div class="round">ROUND 01 / 04</div><h1>Quick count</h1><p class="description">A field of dots will appear. Estimate the total before time runs out.</p><section class="card"><div class="timer-row"><span class="card-label">COUNT THE DOTS</span><span id="pp-timer" class="timer">5.0</span></div><div class="dot-field" id="pp-dots" aria-label="A scattered field of dots"></div><div class="label">YOUR ESTIMATE</div><div class="answer-row"><input id="pp-guess" inputmode="numeric" type="number" min="0" max="99" placeholder="Enter a number" aria-label="Your estimated count"><button type="button" data-action="lock-count">Lock it in</button></div><p class="hint">The dots disappear when the clock hits zero.</p></section><div class="footer"><span>−3 POINTS / DOT OFF</span><span>100 POINTS MAX</span></div>';
+        const dots = content.querySelector('#pp-dots');
+        for (let i = 0; i < answer; i++) {
+          const dot = document.createElement('i');
+          dot.className = 'dot' + (i % 7 === 2 ? ' coral' : i % 7 === 4 ? ' blue' : '');
+          const size = 6 + Math.random() * 5;
+          dot.style.cssText = 'width:' + size + 'px;height:' + size + 'px;left:' + (3 + Math.random() * 92) + '%;top:' + (3 + Math.random() * 92) + '%';
+          dots.append(dot);
+        }
+        const started = performance.now();
+        timer = setInterval(() => {
+          const remaining = Math.max(0, 5 - (performance.now() - started) / 1000);
+          const label = content.querySelector('#pp-timer');
+          if (label) label.textContent = remaining.toFixed(1);
+          if (remaining <= 0) {
+            if (dots) dots.style.opacity = '.16';
+            lockCount();
+          }
+        }, 80);
+      }
+      function lockCount() {
+        if (phase !== 'question' || round !== 0) return;
+        const field = content.querySelector('#pp-guess');
+        const guess = field ? Number(field.value) : NaN;
+        const score = Number.isFinite(guess) && guess > 0 ? 100 - Math.abs(guess - answer) * 3 : 0;
+        finishRound(score, 'There were ' + answer + ' dots. You were ' + Math.abs(guess - answer || answer) + ' off target.');
+      }
+      function drawTrack(canvas, progressValue, reveal, markerValue) {
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const w = rect.width, h = rect.height;
+        if (!w || !h) return;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const ground = h - 25, startX = 20, endX = 20 + answer * (w - 40);
+        ctx.clearRect(0, 0, w, h);
+        ctx.strokeStyle = '#536776'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(12, ground); ctx.lineTo(w - 12, ground); ctx.stroke();
+        if (progressValue > 0 && progressValue <= 1 / 3) {
+          ctx.strokeStyle = '#8cc9df'; ctx.globalAlpha = .7; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath();
+          for (let i = 0; i <= 40 * progressValue * 3; i++) {
+            const t = i / 120, x = startX + (endX - startX) * t, y = ground - 4 * (h * .58) * t * (1 - t);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+          const t = progressValue, x = startX + (endX - startX) * t, y = ground - 4 * (h * .58) * t * (1 - t);
+          ctx.fillStyle = '#8cc9df'; ctx.shadowColor = '#8cc9df'; ctx.shadowBlur = 15; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+        }
+        if (reveal) {
+          const x = startX + (endX - startX) * markerValue;
+          ctx.fillStyle = '#c5ed83'; ctx.beginPath(); ctx.arc(endX, ground - 5, 5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      function horizontalReveal(targetValue, chosenValue, heading) {
+        const targetPct = (targetValue * 100).toFixed(1), chosenPct = (chosenValue * 100).toFixed(1);
+        return '<section class="card position-card"><div class="card-label">' + heading + ' · TARGET AND YOUR PICK</div><div class="position-track"><span class="position-pin target-pin" style="left:' + targetPct + '%"><i></i><b>TARGET</b></span><span class="position-pin your-pin" style="left:' + chosenPct + '%"><i></i><b>YOUR PICK</b></span></div><div class="position-values"><span>Target ' + targetPct + '%</span><span>Your pick ' + chosenPct + '%</span></div></section>';
+      }
+
+      function showTrack() {
+        answer = .15 + Math.random() * .7;
+        content.innerHTML = '<div class="round">ROUND 02 / 04</div><h1>Follow the flight</h1><p class="description">Watch the launch. The projectile disappears after the first third of its path.</p><section class="card"><div class="timer-row"><span id="pp-track-status" class="card-label">WATCH THE TRAJECTORY</span><span class="card-label">TAP THE GROUND</span></div><div class="arena"><canvas id="pp-track" aria-label="Projectile travels along an arc, then disappears. Tap the ground where you expect it to land." role="img"></canvas></div><p class="arena-hint">Choose a landing point along the ground.</p><p id="pp-track-result" class="hint">The landing point stays hidden until your choice is locked.</p></section><div class="footer"><span>−5 POINTS / % OFF</span><span>100 POINTS MAX</span></div>';
+        const canvas = content.querySelector('#pp-track');
+        let started = performance.now(), finished = false;
+        function frame(now) {
+          if (phase !== 'question' || round !== 1) return;
+          const elapsed = now - started;
+          const t = Math.min(1 / 3, elapsed / 1500 * (1 / 3));
+          if (elapsed >= 1500 && !finished) {
+            finished = true;
+            phase = 'question';
+            const status = content.querySelector('#pp-track-status');
+            if (status) status.textContent = 'YOUR TURN — PICK A SPOT';
+            drawTrack(canvas, 0, false, 0);
+          } else drawTrack(canvas, t, false, 0);
+          if (!finished) animation = requestAnimationFrame(frame);
+        }
+        drawTrack(canvas, 0, false, 0);
+        animation = requestAnimationFrame(frame);
+        canvas.addEventListener('pointerdown', (event) => {
+          if (!finished || phase !== 'question' || round !== 1) return;
+          const rect = canvas.getBoundingClientRect();
+          if (event.clientY < rect.top + rect.height - 55) return;
+          chosen = Math.max(0, Math.min(1, (event.clientX - rect.left - 20) / (rect.width - 40)));
+          drawTrack(canvas, 0, true, chosen);
+          const error = Math.abs(chosen - answer) * 100;
+          const score = 100 - error * 5;
+          const result = content.querySelector('#pp-track-result');
+          if (result) result.textContent = 'Landing point: ' + Math.round(answer * 100) + '% · You were ' + error.toFixed(1) + '% off.';
+          finishRound(score, 'You were ' + error.toFixed(1) + '% off the landing point.', horizontalReveal(answer, chosen, 'LANDING POSITION'), true);
+        });
+      }
+      function drawPlane(canvas) {
+        const ctx = canvas.getContext('2d'), rect = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+        const w = rect.width, h = rect.height;
+        if (!w || !h) return;
+        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const cx = w / 2, cy = h / 2, r = Math.min(w * .39, h * .39);
+        ctx.clearRect(0, 0, w, h);
+        ctx.strokeStyle = '#ffffff20'; ctx.lineWidth = 1;
+        for (let i = -1; i <= 1; i++) {
+          const off = i * r; ctx.beginPath(); ctx.moveTo(cx + off, cy - r); ctx.lineTo(cx + off, cy + r); ctx.moveTo(cx - r, cy + off); ctx.lineTo(cx + r, cy + off); ctx.stroke();
+        }
+        ctx.strokeStyle = '#91a2a8'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cx - r - 8, cy); ctx.lineTo(cx + r + 8, cy); ctx.moveTo(cx, cy - r - 8); ctx.lineTo(cx, cy + r + 8); ctx.stroke();
+        ctx.fillStyle = '#9aa9a7'; ctx.font = '10px ui-monospace, monospace'; ctx.fillText('−1', cx - r - 8, cy + 15); ctx.fillText('1', cx + r - 2, cy + 15); ctx.fillText('1', cx + 6, cy - r + 3); ctx.fillText('−1', cx + 6, cy + r - 2); ctx.fillText('(0, 0)', cx + 7, cy + 15);
+        const rad = angle * Math.PI / 180, x = cx + r * Math.cos(rad), y = cy - r * Math.sin(rad);
+        ctx.strokeStyle = '#c5ed83'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+        ctx.fillStyle = '#c5ed83'; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#edf2eb'; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+      }
+      function showAngle() {
+        const requested = 30 + Math.floor(Math.random() * 301);
+        const direction = Math.random() < .5 ? 'counter-clockwise' : 'clockwise';
+        targetAngle = direction === 'counter-clockwise' ? requested : (360 - requested) % 360;
+        angle = 0;
+        content.innerHTML = '<div class="round">ROUND 03 / 04</div><h1>Read the angle</h1><p class="description">Drag the ray from the positive x-axis to match the requested rotation.</p><section class="card"><div class="prompt"><div class="card-label">ROTATE ' + requested + '° ' + direction.toUpperCase() + '</div><div class="prompt-main">Drag the ray ' + direction + '.</div></div><div class="arena"><canvas id="pp-angle" aria-label="Cartesian plane with a draggable ray. No current angle is displayed." role="img"></canvas></div><p class="arena-hint">Estimate by eye, then lock in the ray.</p></section><div class="home-actions"><button type="button" data-action="lock-angle">Lock in angle</button></div><div class="footer"><span>−3 POINTS / DEGREE OFF</span><span>100 POINTS MAX</span></div>';
+        const canvas = content.querySelector('#pp-angle');
+        drawPlane(canvas);
+        let dragging = false;
+        function setRay(event) {
+          const rect = canvas.getBoundingClientRect(), cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+          angle = (Math.atan2(cy - event.clientY, event.clientX - cx) * 180 / Math.PI + 360) % 360;
+          drawPlane(canvas);
+        }
+        canvas.addEventListener('pointerdown', (event) => {
+          dragging = true; canvas.setPointerCapture(event.pointerId); setRay(event);
+        });
+        canvas.addEventListener('pointermove', (event) => { if (dragging) setRay(event); });
+        canvas.addEventListener('pointerup', () => { dragging = false; });
+        canvas.addEventListener('pointercancel', () => { dragging = false; });
+      }
+      function showSplit() {
+        const prompt = fractionPrompts[Math.floor(Math.random() * fractionPrompts.length)];
+        const side = Math.random() < .5 ? 'right' : 'left';
+        const target = side === 'right' ? 1 - prompt.pct / 100 : prompt.pct / 100;
+        chosen = null;
+        content.innerHTML = '<div class="round">ROUND 04 / 04</div><h1>Split the line</h1><p class="description">Place the marker at the requested distance from the named side.</p><section class="card"><div class="prompt"><div class="card-label">MARK ' + prompt.label + ' FROM THE ' + side.toUpperCase() + '</div><div class="prompt-main">Tap the line at ' + prompt.label + ' from the ' + side + '.</div></div><div class="line-area"><div class="line" id="pp-line"><span id="pp-marker" class="marker" hidden></span></div><div class="ends"><span>LEFT</span><span>RIGHT</span></div></div><p class="arena-hint">Tap anywhere on the line to place your point.</p></section><div class="footer"><span>−1 POINT / % OFF</span><span>100 POINTS MAX</span></div>';
+        const line = content.querySelector('#pp-line'), marker = content.querySelector('#pp-marker');
+        line.addEventListener('pointerdown', (event) => {
+          if (phase !== 'question' || round !== 3 || chosen !== null) return;
+          const rect = line.getBoundingClientRect();
+          chosen = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+          marker.hidden = false; marker.style.left = (chosen * 100) + '%';
+          const error = Math.abs(chosen - target) * 100;
+          finishRound(100 - error, 'You were ' + error.toFixed(1) + '% off the requested point.', horizontalReveal(target, chosen, 'REQUESTED SPLIT'), true);
+        });
+      }
+      function showFinal() {
+        stopMotion();
+        phase = 'finished';
+        updateProgress();
+        const average = Math.round(scores.reduce((sum, score) => sum + score, 0) / 4);
+        const won = average >= 70;
+        content.innerHTML = '<div class="round">SET COMPLETE</div><h1>' + (won ? 'You win!' : 'Try again') + '</h1><p class="description">' + (won ? 'Your average cleared the 70-point target.' : 'Your average was below 70. Play the set again.') + '</p><section class="card"><div class="card-label">AVERAGE ACROSS FOUR GAMES</div><div class="result-score">' + average + '<small> / 100</small></div><div class="score-grid">' + scores.map((score, index) => '<div class="score-cell"><span>0' + (index + 1) + ' · ' + ['COUNT', 'TRACK', 'ANGLE', 'SPLIT'][index] + '</span><b>' + score + '</b></div>').join('') + '</div><p class="hint">WIN THRESHOLD · 70 / 100</p></section><div class="home-actions"><button type="button" data-action="replay">Play again →</button></div>';
+      }
+      function goNext() {
+        if (round === 3) showFinal();
+        else { round += 1; showRound(); }
+      }
+      root.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button || !root.contains(button)) return;
+        if (button.dataset.action === 'start') startSet();
+        else if (button.dataset.action === 'lock-count') lockCount();
+        else if (button.dataset.action === 'lock-angle' && phase === 'question' && round === 2) {
+          const error = Math.abs(((angle - targetAngle + 540) % 360) - 180);
+          const radTarget = targetAngle * Math.PI / 180, radChosen = angle * Math.PI / 180;
+          const tx = 100 + 76 * Math.cos(radTarget), ty = 100 - 76 * Math.sin(radTarget), ux = 100 + 76 * Math.cos(radChosen), uy = 100 - 76 * Math.sin(radChosen);
+          const reveal = '<section class="card position-card"><div class="card-label">ANGLE REVEAL · TARGET AND YOUR RAY</div><svg class="angle-reveal" viewBox="0 0 200 200" role="img" aria-label="Target and guessed angle rays"><path d="M24 100H176 M100 24V176"/><path class="target-ray" d="M100 100L' + tx.toFixed(1) + ' ' + ty.toFixed(1) + '"/><path class="your-ray" d="M100 100L' + ux.toFixed(1) + ' ' + uy.toFixed(1) + '"/><circle cx="100" cy="100" r="4"/></svg><div class="ray-legend"><span><i class="target-key"></i>Target ray</span><span><i class="your-key"></i>Your ray</span></div><div class="position-values"><span>Target ' + targetAngle.toFixed(1) + '°</span><span>Your ray ' + angle.toFixed(1) + '°</span></div></section>';
+          finishRound(100 - error * 3, 'Your ray was ' + error.toFixed(1) + '° off.', reveal, true);
+        }
+        else if (button.dataset.action === 'next' && phase === 'feedback') goNext();
+        else if (button.dataset.action === 'replay' && phase === 'finished') startSet();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (phase !== 'question' || round !== 0 || event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.key === 'Enter') lockCount();
+      });
+      content.innerHTML = '<div class="round">FOUR GAMES · ONE SHARP MIND</div><h1>Read the moment.</h1><p class="description">Four quick rounds. Trust your eyes, find the rhythm, and see how close you can get.</p><section class="card"><div class="card-label">YOUR CHALLENGE</div><div class="score-grid"><div class="score-cell"><span>01 · ESTIMATE</span><b>Count</b></div><div class="score-cell"><span>02 · PREDICT</span><b>Track</b></div><div class="score-cell"><span>03 · ROTATE</span><b>Angle</b></div><div class="score-cell"><span>04 · PLACE</span><b>Split</b></div></div><p class="hint">100 points per game · 70 average to win</p></section><div class="home-actions"><button type="button" data-action="start">START</button></div>';
+      updateProgress();
+    })();
+  </script>
+</div>
+
+
+
+</body>
+</html>
