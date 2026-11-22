@@ -1,0 +1,78 @@
+SNOOZELOSE v1.2 — UX FIXES + APPLE HUMAN INTERFACE GUIDELINES AUDIT
+November 21, 2026
+
+SCOPE AND NON-CHANGES
+- Rebuilt the existing home web content inside the iOS Xcode project's bundled PebbleWorld assets.
+- Preserved existing Swift alarm, scheduler, and gameplay logic. No new gameplay rules or features invented.
+- Apple HIG informed implementation; it is NOT a certification of Apple HIG compliance.
+
+THE 20 ISSUES REVISITED
+01 Mascot obscured: separate grid character stage; controls never overlay the character.
+02 Mascot too low: centered and bounded within a flexible region.
+03 Giant unused gap: responsive 5-row grid distributes space.
+04 Alarm buried: native Next Wake-up dock remains accessible as persistent action.
+05 Headline oversized in constrained region: fluid clamp size and balanced two-line layout.
+06 Duplicate set-alarm CTA: single primary hero CTA, secondary native dock now navigates to alarms.
+07 Oversized mascot toolbar: compact 4-control row, full width capped at 520px.
+08 Detached motion toggle: integrated into the mascot toolbar.
+09 Ambiguous dock chevron: right chevron and accessibility hint communicate navigation.
+10 Equal priority CTAs: stronger filled Set Alarm, quieter How It Works.
+11 Mixed typography: system wordmark / deliberate monospaced personality for game UI.
+12 Detached tagline: tagline shares a single document-flow hero-copy region.
+13 Heavy headline shadow: much softer 4px shadow and minimal halo.
+14 Bad paragraph wrap: balanced centered max-width copy.
+15 Low contrast text: stronger ink tones in secondary labels.
+16 Inconsistent glass: consistent translucent/opaque hierarchy, radii, border treatments.
+17 Clouds over headline: reduced opacity and moved lower; background only.
+18 Character disconnected from UI: single animated main-character stage and coherent accent palette.
+19 Visually noisy scenery: lower contrast city / particles / cloud graphics.
+20 Unclear gaze flow: clear brand → message → Pebble → interaction tray → alarm CTA.
+
+ADDITIONAL APPLE HIG-GROUNDED FIXES
+21 Layout uses actual flexible grid tracks rather than competing absolute vertical percentages.
+22 iOS safe-area spacing is included by using CSS env() variables; native bottom dock remains a safeAreaInset.
+23 Touch targets: controls have a 44px minimum even at shorter viewport heights.
+24 Accessibility: labeled mascot actions, alarm toggle actions, add-alarm control and native dock hint.
+25 Accessibility: keyboard focus styling and character Enter/Space support retained.
+26 Help dialog now exposes a dialog role, modal semantics, Escape close, Tab focus containment, focus return, and ARIA visibility.
+27 Respect Reduced Motion: decorative particles/fog are hidden, no looping SVG rig motion.
+28 Respect Reduced Transparency: opaque alternative glass surfaces.
+29 Increased Contrast media preference improves text/background contrast.
+30 Fog rendering fixed: one requestAnimationFrame scheduling per frame instead of a doubled scheduling chain, reduced FPS and clears canvas when paused/hidden.
+31 Responsive compact layouts remain 44px tappable and typography clamps on narrow devices.
+32 Single character is visible: background giant and extra penguin remain hidden.
+
+FILES MODIFIED
+- SnoozeLose/PebbleWorld/css/snoozelose-home-v12.css: grid layout + HIG overrides.
+- SnoozeLose/PebbleWorld/index.html: accessible buttons, modal keyboard semantics, fixed fog rendering.
+- SnoozeLose/PebbleWorldView.swift: native alarm affordance hints / labels.
+- PRD, CHANGELOG, and HIG audit documents.
+
+INTEGRATION AND QA
+PASS: Existing index contains exactly one active primary mascot and complete primary-home DOM controls.
+PASS: All inline script validates under node --check.
+PASS: PebbleWorldView.swift parses under swiftc -frontend -parse.
+PASS: ZIP CRC integrity check on delivered archive.
+NOT VERIFIED: Complete Xcode build, real iPhone safe-area rendering, dynamic type accessibility sizes, VoiceOver end-to-end, device animation smoothness, alarms firing on device, system/notification permission flows.
+LIMITATION: Headless browser navigation (file:// and localhost) was blocked in this execution environment; no claim of screenshot-level visual QA.
+
+HIG SOURCES
+https://developer.apple.com/design/human-interface-guidelines/design-principles/
+https://developer.apple.com/design/human-interface-guidelines/layout/
+https://developer.apple.com/design/human-interface-guidelines/typography/
+https://developer.apple.com/design/human-interface-guidelines/accessibility/
+https://developer.apple.com/design/human-interface-guidelines/motion/
+https://developer.apple.com/design/tips/
+
+DEVICE ACCEPTANCE CHECKLIST
+[ ] Build and run on current iPhone Simulator and a real iPhone.
+[ ] View iPhone SE-sized, regular, and large devices; no overlap or clipped buttons.
+[ ] Confirm Dynamic Island/status bar does not cover brand or headline.
+[ ] Confirm VoiceOver labels and order match visuals.
+[ ] Increase text size / bold text; confirm text and CTA stay readable.
+[ ] Turn on Reduce Motion / Reduce Transparency / Increase Contrast.
+[ ] Start/stop Pebble's three gestures, pause and resume motion.
+[ ] Tap How It Works, close with button and hardware keyboard Escape.
+[ ] Set alarm, open list in dock, enable/disable alarm, verify persistence.
+[ ] Confirm actual alarm / vibration / challenge state on device.
+[ ] Profile energy impact of fog, snow, and SVG motion on older devices.

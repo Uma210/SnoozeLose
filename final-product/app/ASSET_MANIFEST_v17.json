@@ -1,0 +1,21 @@
+{
+  "version": "1.7",
+  "web_entry": "SnoozeLose/PebbleWorld/index.html",
+  "runtime_web_files": [
+    "index.html",
+    "pebble-pet.html",
+    "css/home.css",
+    "js/home.js",
+    "assets/images/skyline-bluegray.png"
+  ],
+  "native_source": [
+    "SnoozeLoseApp.swift",
+    "SnoozeModel.swift",
+    "SnoozeDashboard.swift",
+    "PebbleWorldView.swift",
+    "WakeRinger.swift",
+    "ChallengePlayer.swift"
+  ],
+  "asset_licensing": "Verify skyline rights and any reused art before public distribution",
+  "game_status": "legacy placeholder games kept as-is; awaiting user-provided prebuilt games"
+}

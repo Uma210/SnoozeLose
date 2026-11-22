@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#dff3fc">
+<meta name="description" content="Play with Pebble, your talking, dancing, fish-loving penguin friend.">
+<title>Pebble’s Playroom v1.7 — SnoozeLose</title>
+<style>
+/* 1 — FOUNDATION / DESIGN TOKENS */
+:root{color-scheme:light;--sky:#dff3fc;--ink:#25475b;--deep:#234c60;--mint:#2e786c;--lavender:#6a5acd;--cream:#fffdf7;--outline:rgba(48,101,127,.2);--glass:rgba(255,255,255,.67);--shadow:0 12px 32px rgba(49,106,132,.12);--motion:1;font-family:ui-rounded,"Arial Rounded MT Bold",Nunito,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;width:100%}body{background:#d7edf7;color:var(--ink);overflow-x:hidden}button,input{font:inherit}button{cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #5b57c8;outline-offset:3px}button:disabled{opacity:.55;cursor:not-allowed}
+.app{min-height:100svh;min-height:100dvh;position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:center;background:radial-gradient(ellipse at 50% 24%,#f6fcff 0%,#e4f5fc 36%,#b9dceb 100%)}
+.sky-grid{position:absolute;inset:0;z-index:-5;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.16) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,transparent 6%,black 60%)}
+.cloud{position:absolute;width:260px;height:80px;border-radius:90px;background:rgba(255,255,255,.3);filter:blur(2px);z-index:-4;animation:cloudDrift 19s ease-in-out infinite alternate;pointer-events:none}.cloud:before,.cloud:after{content:"";position:absolute;background:inherit;border-radius:50%}.cloud:before{width:125px;height:110px;left:35px;bottom:17px}.cloud:after{width:155px;height:130px;right:30px;bottom:5px}.cloud.a{top:22%;left:-120px}.cloud.b{top:35%;right:-145px;animation-duration:26s;animation-direction:alternate-reverse}
+.fog{position:absolute;inset:0;z-index:-3;pointer-events:none;opacity:.6;transition:opacity .3s;background:radial-gradient(ellipse 42% 23% at calc(15% + var(--fx,0px)) 60%,rgba(255,255,255,.76),transparent),radial-gradient(ellipse 45% 28% at calc(88% - var(--fx,0px)) 77%,rgba(255,255,255,.7),transparent);animation:fogBreath 9s ease-in-out infinite alternate}
+.spark-layer{position:absolute;inset:0;pointer-events:none;z-index:9;overflow:hidden}.spark{position:absolute;transform:translate(-50%,-50%);font-size:23px;color:#fff;filter:drop-shadow(0 2px 5px rgba(61,113,139,.2));animation:sparkOut .9s forwards;will-change:transform,opacity}
+.topbar{width:min(100%,560px);padding:calc(18px + env(safe-area-inset-top)) 22px 6px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2}.brand{font-size:clamp(21px,6vw,27px);font-weight:950;letter-spacing:-1.6px}.brand span{color:var(--mint)}.pill{border:1px solid rgba(255,255,255,.8);background:var(--glass);border-radius:999px;padding:8px 12px;font-weight:850;letter-spacing:.08em;font-size:10px;box-shadow:0 6px 18px rgba(39,91,112,.07)}
+.intro{text-align:center;padding:6px 16px 0;z-index:1}.eyebrow{font-size:10px;letter-spacing:.23em;font-weight:900;color:#5c879b}.intro h1{font-weight:950;font-size:clamp(34px,8.2vw,53px);letter-spacing:-.07em;line-height:.99;margin:8px 0 8px;color:#28556a;text-shadow:0 3px 0 #ffffffaa,0 8px 18px rgba(46,109,136,.10)}.intro p{font-size:clamp(12px,3vw,14px);font-weight:700;color:#4d7487;margin:0}
+.world{width:min(100%,560px);position:relative;flex:1;min-height:345px;display:flex;align-items:center;justify-content:center;isolation:isolate;padding:6px 0 0;touch-action:pan-y}.world:after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:min(300px,65vw);height:30px;border-radius:50%;background:#5189a241;filter:blur(13px);z-index:-1}.room-floor{height:28%;position:absolute;inset:auto 0 0;z-index:-2;background:linear-gradient(transparent,#95c0d157);border-top:1px solid #ffffff73;pointer-events:none}
+.character-wrap{width:min(370px,90vw);height:min(420px,49dvh);min-height:265px;position:relative;display:grid;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;filter:drop-shadow(0 14px 10px rgba(39,85,109,.07))}.character-wrap:active{cursor:grabbing}#pebble-svg{display:block;width:100%;height:100%;max-height:100%;overflow:visible;pointer-events:visiblePainted;filter:none}#peb-rig{transform-box:fill-box;transform-origin:50% 80%;animation:breathing 3s ease-in-out infinite}#peb-wing-right,#peb-wing-left,#peb-foot-left,#peb-foot-right{transform-box:fill-box;transform-origin:50% 14%}#peb-wing-right{animation:wingRight 5s ease-in-out infinite}#peb-wing-left{animation:wingLeft 5s ease-in-out infinite}.hit-zone{cursor:pointer}.hit-zone ellipse{fill:transparent;stroke:none;pointer-events:all}#peb-fish{opacity:0;transition:opacity .25s}#peb-emote{transition:opacity .1s}#peb-open-mouth{pointer-events:none}#peb-blink{pointer-events:none}#peb-eye-left,#peb-eye-right{animation:lookAround 7s ease-in-out infinite} .world[data-mood="sleeping"] #peb-eye-left,.world[data-mood="sleeping"] #peb-eye-right{animation:none}
+.world[data-mood="listening"] #peb-rig{animation:leanIn .7s ease-in-out infinite alternate}.world[data-mood="listening"] #peb-wing-right{animation:wingRight .6s ease-in-out infinite alternate}.world[data-mood="talking"] #peb-rig{animation:talkBob .25s ease-in-out infinite alternate}.world[data-mood="happy"] #peb-rig{animation:happyBounce .45s ease-in-out infinite alternate}.world[data-mood="happy"] #peb-wing-left{animation:wave .3s ease-in-out infinite alternate}.world[data-mood="angry"] #peb-rig{animation:angryShake .15s ease-in-out 6}.world[data-mood="dizzy"] #peb-rig{animation:dizzy .9s ease-in-out infinite}.world[data-mood="eating"] #peb-rig{animation:chew .22s ease-in-out infinite alternate}.world[data-mood="sleeping"] #peb-rig{animation:sleepBreath 3.2s ease-in-out infinite}.world[data-mood="sleeping"] #peb-sleep-eyes{opacity:1}.world[data-mood="sleeping"] #peb-eye-left,.world[data-mood="sleeping"] #peb-eye-right{opacity:0}.world[data-mood="sleeping"] #peb-wing-left,.world[data-mood="sleeping"] #peb-wing-right{animation:none}.world[data-mood="playing"] #peb-rig{animation:happyBounce .32s ease-in-out infinite alternate}.world[data-mood="eating"] #peb-fish{opacity:1;animation:fishNibble .33s ease-in-out infinite alternate}.world[data-mood="talking"] #peb-open-mouth{opacity:1}.world[data-mood="talking"] #peb-mouth{opacity:0}
+.mood-bubble{position:absolute;left:50%;top:4px;transform:translateX(-50%);white-space:nowrap;max-width:85%;border:1px solid #fff;background:#fffcf0ed;border-radius:20px;padding:10px 16px;color:#42667a;box-shadow:var(--shadow);font-size:12px;font-weight:900;letter-spacing:.07em;text-align:center;z-index:2;pointer-events:none}.zz{position:absolute;right:15%;top:9%;font-size:28px;font-weight:900;color:#687fc5;opacity:0;transform:rotate(10deg)}.world[data-mood="sleeping"] .zz{opacity:1;animation:zzFloat 2.4s ease-in-out infinite}
+.action-hint{font-size:11px;color:#567c8d;font-weight:750;text-align:center;margin:0 0 10px;z-index:2}.panel{width:min(calc(100% - 32px),520px);margin:0 16px 10px;z-index:3;border-radius:28px;border:1px solid rgba(255,255,255,.88);background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:15px 15px 12px;box-shadow:0 12px 30px rgba(47,101,129,.12)}.status-line{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}.status{font-size:12px;font-weight:900;color:#265b64;display:flex;align-items:center;gap:7px}.dot{height:9px;width:9px;border-radius:50%;background:#47b399;box-shadow:0 0 0 4px #9cddd74f}.status[data-active="true"] .dot{background:#e38b6e;animation:pulse 1s ease-in-out infinite}.mic-note{font-size:10px;color:#688498;text-align:right;max-width:50%}.toolbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.tool{border:1px solid #ffffffb8;background:#ffffffdb;border-radius:19px;min-height:66px;padding:7px 2px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:#345f74;box-shadow:0 4px 0 #bad1dc75,0 5px 14px #3c7a9920;transition:transform .15s,background .15s;touch-action:manipulation}.tool:active{transform:translateY(3px);box-shadow:0 1px 0 #bad1dc75}.tool svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.tool span{font-size:10px;font-weight:900;letter-spacing:.02em}.tool.primary{background:#2d796e;color:#fff}.tool.primary[aria-pressed="true"]{background:#7858c6}.tool[aria-pressed="true"]:not(.primary){background:#ded8ff;color:#4a419a}.mini-footer{padding-bottom:max(12px,env(safe-area-inset-bottom));font-size:10px;color:#53778b;font-weight:700;text-align:center;z-index:1}
+.backdrop{position:fixed;inset:0;background:#203f558c;z-index:20;display:grid;place-items:end center;padding:15px;backdrop-filter:blur(7px)}.backdrop[hidden]{display:none}.settings{background:#f4fbff;border-radius:30px;width:min(100%,450px);padding:22px;box-shadow:0 25px 70px #183e5f55;color:var(--ink);max-height:85dvh;overflow:auto}.settings-head{display:flex;justify-content:space-between;align-items:center}.settings h2{margin:0;font-size:24px}.close{border:0;background:#dfebf3;color:#34596b;border-radius:50%;height:44px;width:44px;font-size:26px}.field{display:block;margin:20px 0}.field label{display:flex;justify-content:space-between;font-size:14px;font-weight:850;margin-bottom:10px}.field input{width:100%;accent-color:#6357bc;min-height:30px}.settings small{color:#658195;display:block;line-height:1.5}.toast{position:fixed;bottom:calc(114px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:30;background:#2b5162;color:#fff;font-size:12px;font-weight:700;padding:12px 16px;border-radius:18px;box-shadow:var(--shadow);width:max-content;max-width:90vw;text-align:center}.toast[hidden]{display:none}
+@keyframes lookAround{0%,18%,70%,100%{transform:translateX(0)}30%,38%{transform:translateX(-3px)}53%,61%{transform:translateX(3px)}}@keyframes breathing{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.014)}}@keyframes leanIn{0%{transform:rotate(-5deg) translateY(2px)}100%{transform:rotate(3deg) translateY(-7px)}}@keyframes talkBob{to{transform:translateY(-3px) rotate(-1deg)}}@keyframes happyBounce{to{transform:translateY(-14px) rotate(4deg)}}@keyframes sleepBreath{50%{transform:scale(1.012) translateY(4px)}}@keyframes angryShake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}@keyframes dizzy{50%{transform:rotate(13deg) translateX(9px)}}@keyframes chew{to{transform:scaleY(.97) translateY(4px)}}@keyframes wingRight{50%{transform:rotate(-5deg)}}@keyframes wingLeft{50%{transform:rotate(5deg)}}@keyframes wave{to{transform:rotate(-18deg)}}@keyframes cloudDrift{to{transform:translateX(80px)}}@keyframes fogBreath{to{opacity:.85;transform:translateX(20px)}}@keyframes zzFloat{to{transform:translate(11px,-18px) rotate(17deg);opacity:.25}}@keyframes sparkOut{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}35%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.3)}}@keyframes pulse{50%{box-shadow:0 0 0 7px #e8b6a344}}
+@media(max-height:700px){.topbar{padding-top:calc(8px + env(safe-area-inset-top))}.intro h1{font-size:36px}.world{min-height:255px}.character-wrap{height:41dvh;min-height:230px}.panel{padding:10px}.tool{min-height:58px}.action-hint{margin-bottom:4px}}
+@media(max-width:360px){.panel{width:calc(100% - 18px);margin-left:9px;margin-right:9px}.tool{border-radius:13px}.tool span{font-size:9px}.mood-bubble{top:0;font-size:10px}.topbar{padding-left:14px;padding-right:14px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}.fog{opacity:.3}.cloud{opacity:.4}}
+@media(prefers-reduced-transparency:reduce){.panel,.pill,.mood-bubble{background:#f5fbff;backdrop-filter:none;-webkit-backdrop-filter:none}}
+
+/* 8 — EXPRESSIVE PEBBLE / SPOKEN VOICE CONTROLS */
+.world[data-speaking="true"] #peb-mouth,.world[data-speaking="true"] #peb-grin,.world[data-speaking="true"] #peb-surprise-mouth{opacity:0!important}
+#peb-eyebrows{opacity:0;transition:opacity .12s} .world[data-mood="angry"] #peb-eyebrows,.world[data-mood="surprised"] #peb-eyebrows,.world[data-mood="smug"] #peb-eyebrows,.world[data-mood="shy"] #peb-eyebrows{opacity:1}
+#peb-eyebrows path{stroke:#354953;stroke-width:3.5;stroke-linecap:round;fill:none;transform-box:fill-box;transform-origin:center;transition:transform .16s ease}
+#peb-surprised-eyes,#peb-happy-eyes,#peb-spiral-eyes,#peb-surprise-mouth,#peb-grin{transition:opacity .1s ease;pointer-events:none}
+.world[data-mood="angry"] #peb-brow-l{transform:rotate(21deg) translateY(4px)}
+.world[data-mood="angry"] #peb-brow-r{transform:rotate(-21deg) translateY(4px)}
+.world[data-mood="surprised"] #peb-brow-l,.world[data-mood="surprised"] #peb-brow-r{transform:translateY(-9px)}
+.world[data-mood="smug"] #peb-brow-r{transform:translateY(-7px) rotate(-12deg)}
+.world[data-mood="shy"] #peb-brow-l,.world[data-mood="shy"] #peb-brow-r{transform:translateY(3px)}
+.world[data-mood="surprised"] #peb-surprised-eyes,.world[data-mood="surprised"] #peb-surprise-mouth{opacity:1}
+.world[data-mood="surprised"] #peb-eye-left,.world[data-mood="surprised"] #peb-eye-right,.world[data-mood="surprised"] #peb-mouth{opacity:0}
+.world[data-mood="dizzy"] #peb-spiral-eyes{opacity:1}
+.world[data-mood="dizzy"] #peb-eye-left,.world[data-mood="dizzy"] #peb-eye-right{opacity:0}
+.world[data-mood="laughing"] #peb-happy-eyes,.world[data-mood="laughing"] #peb-grin,.world[data-mood="excited"] #peb-happy-eyes,.world[data-mood="excited"] #peb-grin,.world[data-mood="happy"] #peb-happy-eyes{opacity:1}
+.world[data-mood="laughing"] #peb-mouth,.world[data-mood="excited"] #peb-mouth,.world[data-mood="laughing"] #peb-eye-left,.world[data-mood="laughing"] #peb-eye-right,.world[data-mood="excited"] #peb-eye-left,.world[data-mood="excited"] #peb-eye-right,.world[data-mood="happy"] #peb-eye-left,.world[data-mood="happy"] #peb-eye-right{opacity:0}
+.world[data-mood="laughing"] #peb-rig{animation:happyBounce .28s ease-in-out infinite alternate}
+.world[data-mood="excited"] #peb-rig{animation:happyBounce .4s ease-in-out infinite alternate}
+.world[data-mood="excited"] #peb-wing-right,.world[data-mood="excited"] #peb-wing-left{animation:wave .35s ease-in-out infinite alternate}
+.world[data-mood="surprised"] #peb-rig{animation:surpriseHop .45s ease-in-out infinite alternate}
+.world[data-mood="shy"] #peb-rig{animation:leanIn 1.3s ease-in-out infinite alternate}
+.world[data-mood="smug"] #peb-rig{animation:smugSway 2s ease-in-out infinite alternate}
+.world[data-mood="yawning"] #peb-rig{animation:sleepBreath 2s ease-in-out infinite}
+.world[data-mood="yawning"] #peb-surprise-mouth{opacity:1}
+.world[data-mood="yawning"] #peb-mouth{opacity:0}
+.world[data-mood="talking"] #peb-eyebrows{opacity:1}
+@keyframes surpriseHop{from{transform:translateY(0) scale(1)}to{transform:translateY(-7px) scale(1.025)}}
+@keyframes smugSway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.voice-actions{display:flex;gap:9px;align-items:center;justify-content:center;flex-wrap:wrap;width:min(100%,540px);padding:0 14px 9px;z-index:4}
+.voice-chip{min-height:46px;padding:10px 17px;border-radius:999px;border:1px solid #fff;background:#2d786d;color:white;font-size:12px;font-weight:900;box-shadow:0 4px 0 #1f5852,0 8px 18px #396d7e2b;transition:transform .15s}
+.voice-chip-alt{background:#f5fcff;color:#375d71;box-shadow:0 4px 0 #bbd4df,0 8px 18px #396d7e18}
+.voice-chip:active{transform:translateY(3px);box-shadow:0 1px 0 #1f5852}
+.voice-chip[disabled]{opacity:.65}
+@media(max-height:740px){.character-wrap{max-height:38dvh;min-height:205px}.world{min-height:240px}.intro h1{font-size:clamp(27px,7vw,40px)}.voice-actions{padding-bottom:5px}.tool{min-height:60px}}
+@media(prefers-reduced-motion:reduce){.world[data-mood="surprised"] #peb-rig,.world[data-mood="smug"] #peb-rig,.world[data-mood="excited"] #peb-rig,.world[data-mood="laughing"] #peb-rig{animation:none}}
+
+
+/* V3 — rig-coherent faces, real toy and feeding props, state-exclusive layers */
+#peb-toy-ball{opacity:0;pointer-events:none;transform-box:fill-box;transform-origin:center}
+.world[data-mood="toying"] #peb-toy-ball{opacity:1;animation:ballBounce .55s cubic-bezier(.25,.7,.45,1) infinite alternate}
+.world[data-mood="toying"] #peb-wing-right{animation:wave .42s ease-in-out infinite alternate}
+.world[data-mood="toying"] #peb-rig{animation:happyBounce .5s ease-in-out infinite alternate}
+.world[data-mood="eating"] #peb-fish{opacity:1;animation:fishNibble .45s ease-in-out infinite alternate}
+.world[data-mood="sleeping"] #peb-mouth,.world[data-mood="sleeping"] #peb-grin,.world[data-mood="sleeping"] #peb-surprise-mouth{opacity:0!important}
+.world[data-mood="sleeping"] #peb-blink,.world[data-mood="sleeping"] #peb-surprised-eyes,.world[data-mood="sleeping"] #peb-happy-eyes,.world[data-mood="sleeping"] #peb-spiral-eyes{opacity:0!important}
+.world[data-mood="talking"] #peb-grin,.world[data-mood="talking"] #peb-surprise-mouth{opacity:0!important}
+.world[data-mood="yawning"] #peb-happy-eyes,.world[data-mood="yawning"] #peb-surprised-eyes{opacity:0}
+@keyframes ballBounce{from{transform:translate(-42px,-26px) rotate(-35deg) scale(.9)}to{transform:translate(-18px,-82px) rotate(45deg) scale(1.08)}}
+@keyframes fishNibble{from{transform:translate(-20px,24px) rotate(-15deg)}to{transform:translate(-49px,67px) rotate(-35deg)}}
+/* Allow small screens to scroll rather than cropping the character or controls. */
+.app{overflow-x:clip;overflow-y:auto}
+.character-wrap{isolation:isolate;max-width:100%;overflow:visible}
+#pebble-svg{overflow:visible;contain:none}
+@media(max-height:650px){.world{min-height:225px}.character-wrap{height:255px;min-height:225px}.intro{padding-top:0}.intro h1{font-size:30px}.panel{margin-bottom:6px}.mini-footer{padding-bottom:calc(6px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.world[data-mood="toying"] #peb-toy-ball,.world[data-mood="eating"] #peb-fish{animation:none}}
+
+/* SnoozeLose embedded character mode. Only the pet, status bubble and settings are visible. */
+html.pet-embedded,html.pet-embedded body,html.pet-embedded .app{height:100%;min-height:0;background:transparent!important;overflow:hidden!important}
+html.pet-embedded .app{display:flex;justify-content:center;background:transparent!important;overflow:visible!important}
+html.pet-embedded .sky-grid,html.pet-embedded .cloud,html.pet-embedded .fog,html.pet-embedded .room-floor,html.pet-embedded .topbar,html.pet-embedded .intro,html.pet-embedded .voice-actions,html.pet-embedded .panel,html.pet-embedded .mini-footer,html.pet-embedded .action-hint{display:none!important}
+html.pet-embedded .world{flex:1;min-height:0;height:100%;width:100%;padding:0;max-width:none;overflow:visible;touch-action:pan-y}
+html.pet-embedded .world:after{bottom:3%;width:50%;height:15px}
+html.pet-embedded .character-wrap{width:min(100%,360px);height:100%;min-height:0;max-height:none;overflow:visible;touch-action:none}
+html.pet-embedded #pebble-svg{width:100%;height:100%;object-fit:contain;overflow:visible}
+html.pet-embedded .mood-bubble{top:1%;font-size:clamp(10px,2.3vw,12px);padding:7px 10px;max-width:90%;overflow:hidden;text-overflow:ellipsis;z-index:3}
+html.pet-embedded .zz{right:20%;top:10%}
+html.pet-embedded .spark-layer{overflow:visible}
+html.pet-embedded .toast{bottom:8px;width:max-content;max-width:95%;text-align:center}
+html.pet-embedded .backdrop{position:fixed;inset:0;padding:5px;place-items:center}
+html.pet-embedded .settings{max-height:95%;width:min(100%,380px);border-radius:18px;padding:16px}
+@media(prefers-reduced-motion:reduce){html.pet-embedded .spark-layer{display:none}}
+@media(max-height:290px){html.pet-embedded .character-wrap{transform:translateY(-23px) scale(.74);transform-origin:50% 49%}}
+
+
+/* PEBBLE v1.7 — Grounded articulated motion replaces rigid animation loops.
+   SVG transform attributes are owned by a single requestAnimationFrame controller. */
+#peb-rig,#peb-body,#peb-head,#peb-wing-left,#peb-wing-right,#peb-foot-left,#peb-foot-right,#peb-fish,#peb-toy-ball,#peb-eye-left,#peb-eye-right{animation:none!important;transition:none!important}
+#peb-head{transform-box:view-box;transform-origin:98px 145px}
+#peb-rig{transform-box:view-box;transform-origin:98px 174px}
+#peb-head-hit,#peb-belly-hit{cursor:pointer}
+#peb-spiral-eyes{pointer-events:none}
+@media(prefers-reduced-motion:reduce){#peb-rig,#peb-head,#peb-body,#peb-wing-left,#peb-wing-right,#peb-foot-left,#peb-foot-right{animation:none!important}}
+
+/* Avoid SVG intrinsic aspect ratio enlarging the grid track inside a small iframe.
+   The positioned SVG now always fits the host, with feet remaining on screen. */
+html.pet-embedded #pebble-svg{position:absolute;inset:0;width:100%!important;height:100%!important;max-height:100%!important;min-height:0}
+/* Neutralize old CSS pivots: SVG joints are transformed by explicit absolute pivots only. */
+#peb-rig,#peb-body,#peb-head,#peb-wing-left,#peb-wing-right,#peb-foot-left,#peb-foot-right,#peb-fish,#peb-toy-ball{transform-origin:0 0!important;transform-box:view-box!important}
+
+/* PEBBLE v1.7 — compact side interactions and state-led facial expressions. */
+.motion-rail{position:absolute;top:50%;transform:translateY(-42%);z-index:5;display:flex;flex-direction:column;gap:14px;pointer-events:none}
+.motion-left{left:clamp(5px,1.6vw,14px)}.motion-right{right:clamp(5px,1.6vw,14px)}
+.move-btn{pointer-events:auto;width:65px;min-height:69px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;border-radius:21px;background:rgba(255,255,255,.74);border:1px solid rgba(255,255,255,.98);box-shadow:0 6px 0 rgba(93,145,162,.14),0 12px 24px rgba(56,96,111,.09);color:#37667a;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:transform .16s ease,background .16s ease,box-shadow .16s ease}
+.move-btn svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.move-btn span{font-size:10px;font-weight:900;letter-spacing:-.01em}
+.move-btn:hover{background:#fff;transform:translateY(-2px);box-shadow:0 8px 0 rgba(93,145,162,.12),0 14px 25px rgba(56,96,111,.13)}
+.move-btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(93,145,162,.17)}
+.motion-right .move-btn:first-child{background:rgba(255,244,217,.88);color:#8a5a27}
+#peb-wing-left-hit,#peb-wing-right-hit{cursor:grab}
+#peb-wing-left-hit:active,#peb-wing-right-hit:active{cursor:grabbing}
+.world[data-mood="winking"] #peb-eye-left{opacity:0}
+.world[data-mood="winking"] #peb-wink-left{opacity:1}
+.world[data-mood="dancing"] #peb-happy-eyes,.world[data-mood="waving"] #peb-happy-eyes,.world[data-mood="highfive"] #peb-happy-eyes,.world[data-mood="cuddling"] #peb-happy-eyes{opacity:1}
+.world[data-mood="dancing"] #peb-eye-left,.world[data-mood="dancing"] #peb-eye-right,.world[data-mood="waving"] #peb-eye-left,.world[data-mood="waving"] #peb-eye-right,.world[data-mood="highfive"] #peb-eye-left,.world[data-mood="highfive"] #peb-eye-right,.world[data-mood="cuddling"] #peb-eye-left,.world[data-mood="cuddling"] #peb-eye-right{opacity:0}
+.world[data-mood="dancing"] #peb-grin,.world[data-mood="waving"] #peb-grin,.world[data-mood="highfive"] #peb-grin,.world[data-mood="cuddling"] #peb-grin,.world[data-mood="winking"] #peb-grin{opacity:1}
+.world[data-mood="dancing"] #peb-mouth,.world[data-mood="waving"] #peb-mouth,.world[data-mood="highfive"] #peb-mouth,.world[data-mood="cuddling"] #peb-mouth,.world[data-mood="winking"] #peb-mouth{opacity:0}
+.world[data-mood="curious"] #peb-eyebrows,.world[data-mood="peeking"] #peb-eyebrows{opacity:1}
+.world[data-mood="curious"] #peb-brow-l,.world[data-mood="peeking"] #peb-brow-r{transform:translateY(-4px) rotate(-6deg)}
+/* Animation lives exclusively in the SVG animation controller. */
+#peb-scarf-tail{animation:none!important;transform-origin:0 0!important;transform-box:view-box!important}
+html.pet-embedded .motion-rail{display:none!important}
+@media(max-width:440px){.motion-rail{gap:10px;top:53%}.move-btn{width:49px;min-height:58px;border-radius:16px;gap:4px}.move-btn svg{width:22px;height:22px}.move-btn span{font-size:9px}.motion-left{left:2px}.motion-right{right:2px}}
+@media(max-height:640px){.motion-rail{top:52%;gap:6px}.move-btn{min-height:52px;width:51px;border-radius:16px}.move-btn svg{width:20px;height:20px}}
+@media(prefers-reduced-motion:reduce){.move-btn{transition:none}}
+/* On very short phones, scroll the page rather than letting the control panel
+   cover the penguin's legs. The complete character must remain in the stage. */
+@media(max-width:440px) and (max-height:660px){
+ .world{flex:none;min-height:315px;overflow:visible}
+ .character-wrap{height:298px;min-height:298px;max-height:none}
+ .intro h1{font-size:clamp(29px,8vw,39px)}
+}
+
+</style>
+<script>if(new URLSearchParams(location.search).has('embedded'))document.documentElement.classList.add('pet-embedded');</script>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="sky-grid"></div><div class="cloud a"></div><div class="cloud b"></div><div class="fog" id="fog"></div><div class="spark-layer" id="sparks" aria-hidden="true"></div>
+  <header class="topbar"><div class="brand">snooze<span>LOSE</span></div><div class="pill">PEBBLE'S PLAYROOM</div></header>
+  <section class="intro" aria-label="Welcome"><div class="eyebrow">YOUR LITTLE WAKE-UP BUDDY</div><h1>HEY, PEBBLE!</h1><p>He watches, waves, dances & reacts to your every move.</p></section>
+  <main class="world" id="world" data-mood="idle" aria-label="Play with Pebble"><div class="room-floor"></div>
+    <div class="mood-bubble" id="bubble" role="status" aria-live="polite">Psst… poke my belly!</div>
+    <div class="zz" aria-hidden="true">Zzz</div>
+    <div class="character-wrap" id="character" role="group" aria-label="Interactive penguin. Tap his head, belly, or flippers; stroke his head, or hold him for a cuddle.">
+<svg aria-label="Pebble the penguin, standing on two feet with a round body and naturally articulated head and flippers" id="pebble-svg" overflow="visible" role="img" viewBox="-24 -13 252 268" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="peb-belly" cx="35%" cy="22%" r="84%"><stop stop-color="#ffffff"/><stop offset=".65" stop-color="#fafdfd"/><stop offset="1" stop-color="#e1edf3"/></radialGradient>
+  <linearGradient id="peb-feather" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#445b69"/><stop offset="1" stop-color="#2e414d"/></linearGradient>
+  <linearGradient id="peb-flipper" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#435968"/><stop offset="1" stop-color="#324550"/></linearGradient>
+  <linearGradient id="peb-feet-color" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#f6c49e"/><stop offset="1" stop-color="#eaa977"/></linearGradient>
+</defs>
+<ellipse class="peb-shadow" cx="98" cy="231" fill="#496879" opacity=".22" rx="49" ry="6.5"/>
+<!-- Feet belong to the ground layer, never to the rocking torso. -->
+<g id="peb-feet">
+ <g id="peb-foot-left"><path d="M77 200 C66 201 55 209 52 219 C48 230 61 231 79 228 C90 227 96 220 96 209 Z" fill="url(#peb-feet-color)" stroke="#354955" stroke-width="3.3" stroke-linejoin="round"/><path d="M68 224 Q72 226 74 226 M79 223 Q83 225 85 224" stroke="#d69165" stroke-width="1.7" stroke-linecap="round" fill="none"/></g>
+ <g id="peb-foot-right"><path d="M101 209 C103 222 112 227 125 228 C144 231 151 227 147 218 C142 208 132 201 119 200 Z" fill="url(#peb-feet-color)" stroke="#354955" stroke-width="3.3" stroke-linejoin="round"/><path d="M121 224 Q125 226 128 225 M133 224 Q137 225 139 223" stroke="#d69165" stroke-width="1.7" stroke-linecap="round" fill="none"/></g>
+</g>
+<g id="peb-rig">
+ <!-- Flippers rotate from shoulder pivots; their neutral pose points downward. -->
+ <g id="peb-wing-left"><path d="M55 127 C43 128 33 145 28 171 C24 185 27 196 37 196 C47 195 59 172 66 148 Q66 135 55 127Z" fill="url(#peb-flipper)" stroke="#2d414c" stroke-width="3.8" stroke-linejoin="round"/><path d="M38 172 Q35 181 36 187" stroke="#667c89" opacity=".45" stroke-width="2.5" fill="none" stroke-linecap="round"/><g class="hit-zone" id="peb-wing-left-hit"><path d="M57 127 C43 126 29 143 24 168 C18 190 24 201 38 200 C50 198 63 175 70 147Z" fill="transparent" stroke="none" pointer-events="all"/></g></g>
+ <g id="peb-wing-right"><path d="M141 127 C153 128 163 146 169 169 C173 184 171 195 161 196 C151 195 139 173 132 148 Q131 136 141 127Z" fill="url(#peb-flipper)" stroke="#2d414c" stroke-width="3.8" stroke-linejoin="round"/><path d="M157 170 Q163 182 162 188" stroke="#667c89" opacity=".45" stroke-width="2.5" fill="none" stroke-linecap="round"/><g class="hit-zone" id="peb-wing-right-hit"><path d="M139 127 C154 126 169 143 174 168 C180 190 174 201 160 200 C148 198 135 175 128 147Z" fill="transparent" stroke="none" pointer-events="all"/></g></g>
+ <g id="peb-body">
+  <path d="M55 112 C44 126 40 161 43 185 C45 207 60 220 83 222 C108 225 134 219 145 207 C159 187 155 148 141 113 Q99 102 55 112Z" fill="url(#peb-feather)" stroke="#293d49" stroke-width="3.8"/>
+  <path d="M63 140 Q55 165 59 193" stroke="#6b8190" opacity=".27" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <ellipse cx="98" cy="178" fill="url(#peb-belly)" id="peb-belly-shape" rx="40" ry="37.5"/>
+  <path d="M75 202 Q98 211 122 201" stroke="#cbdbe4" stroke-width="2" opacity=".6" stroke-linecap="round" fill="none"/>
+  <g class="hit-zone" id="peb-belly-hit"><ellipse cx="98" cy="177" rx="42" ry="35" fill="transparent" stroke="none" pointer-events="all"/></g>
+ </g>
+ <g id="peb-head">
+  <path d="M47 121 C41 103 42 76 53 61 C65 43 84 44 98 45 C127 42 149 57 151 87 C154 110 149 135 134 146 C118 160 76 161 59 147 C53 142 49 133 47 121Z" fill="url(#peb-feather)" stroke="#2a3e4a" stroke-width="3.9"/>
+  <path d="M56 111 C50 87 57 70 73 71 C85 71 93 81 98 89 C103 81 112 71 125 71 C143 72 146 91 139 113 C134 139 117 149 98 150 C77 149 62 139 56 111Z" fill="#fffdf9"/>
+  <g id="peb-eye-left"><ellipse cx="78" cy="110.8" fill="white" rx="9.5" ry="10.5"/><g class="peb-pupil-unit"><circle class="peb-pupil" cx="79" cy="111.5" fill="#334650" r="5.4"/><circle cx="80" cy="108.5" fill="white" r="2"/></g></g>
+  <g id="peb-eye-right"><ellipse cx="118" cy="110.8" fill="white" rx="9.5" ry="10.5"/><g class="peb-pupil-unit"><circle class="peb-pupil" cx="117" cy="111.5" fill="#334650" r="5.4"/><circle cx="118" cy="108.5" fill="white" r="2"/></g></g>
+  <g id="peb-wink-left" opacity="0" aria-hidden="true"><path d="M69 112 Q78 119 88 112" fill="none" stroke="#354955" stroke-width="4" stroke-linecap="round"/></g>
+  <g id="peb-blink" opacity="0"><path d="M69 111 Q78 117 87 111 M109 111 Q118 117 127 111" fill="none" stroke="#344855" stroke-linecap="round" stroke-width="4"/></g>
+  <g aria-hidden="true" id="peb-eyebrows"><path d="M69 96 Q78 93 87 96" id="peb-brow-l"/><path d="M109 96 Q118 93 127 96" id="peb-brow-r"/></g>
+  <g id="peb-surprised-eyes" opacity="0"><ellipse cx="78" cy="111" fill="white" rx="10.5" ry="13"/><ellipse cx="118" cy="111" fill="white" rx="10.5" ry="13"/><circle cx="79" cy="112" fill="#354953" r="3.8"/><circle cx="117" cy="112" fill="#354953" r="3.8"/></g>
+  <g id="peb-happy-eyes" opacity="0"><path d="M68 113 Q78 99 88 113 M108 113 Q118 99 128 113" fill="none" stroke="#354953" stroke-linecap="round" stroke-width="4"/></g>
+  <g id="peb-spiral-eyes" opacity="0"><path d="M77 107 c-12 -6 -14 11 -2 12 c11 1 11 -13 0 -10 M117 107 c-12 -6 -14 11 -2 12 c11 1 11 -13 0 -10" fill="none" stroke="#354953" stroke-linecap="round" stroke-width="3.3"/></g>
+  <g id="peb-cheeks"><ellipse cx="63.5" cy="126" fill="#f4b8a4" opacity=".74" rx="7.4" ry="4.2"/><ellipse cx="131.5" cy="126" fill="#f4b8a4" opacity=".74" rx="7.4" ry="4.2"/></g>
+  <g id="peb-beak"><path d="M87 123 Q98 114 109 123 Q108 130 98 133 Q88 130 87 123Z" fill="#f1bc91" stroke="#384b54" stroke-width="2.6" stroke-linejoin="round"/><path d="M92 137 Q98 142 104 137" fill="none" id="peb-mouth" stroke="#364955" stroke-linecap="round" stroke-width="2.5"/><path d="M86 136 Q98 151 110 136 Q98 143 86 136Z" fill="#784a53" id="peb-grin" opacity="0" stroke="#354953" stroke-width="1.9"/></g>
+  <g id="peb-sleep-eyes" opacity="0"><path d="M69 111 Q78 118 87 111 M109 111 Q118 118 127 111" fill="none" stroke="#354955" stroke-linecap="round" stroke-width="4"/></g>
+  <ellipse cx="98" cy="138" fill="#7a5155" id="peb-open-mouth" opacity="0" rx="8" ry="4" stroke="#354955" stroke-width="2"/>
+  <ellipse cx="98" cy="138" fill="#6b4551" id="peb-surprise-mouth" opacity="0" rx="6.5" ry="9" stroke="#354955" stroke-width="2"/>
+  <!-- The scarf is part of the head/neck assembly so it never detaches. -->
+  <g id="peb-scarf"><path d="M53 144 Q98 157 143 144 L142 155 Q98 167 54 155Z" fill="#b8d4e2" stroke="#354b58" stroke-width="3"/><g id="peb-scarf-tail"><path d="M97 158 L107 168 L97 180 L88 169Z" fill="#d4e8f2" stroke="#354b58" stroke-width="2.8" stroke-linejoin="round"/></g><path d="M61 149 Q97 159 135 149" fill="none" stroke="#f1fdff" opacity=".6" stroke-width="1.8"/></g>
+  <g class="hit-zone" id="peb-head-hit"><ellipse cx="98" cy="103" rx="53" ry="57" fill="transparent" stroke="none" pointer-events="all"/></g>
+ </g>
+ <!-- Props are separate accessories, never sewn into the right flipper. -->
+ <g id="peb-fish" aria-hidden="true"><path d="M125 158 Q134 146 149 148 Q164 149 170 158 Q158 171 145 171 Q132 170 125 158Z" fill="#b3cfdd" stroke="#364c58" stroke-width="3.2"/><path d="M168 158 L182 147 Q179 159 182 172 L168 164Z" fill="#91aebf" stroke="#364c58" stroke-width="3" stroke-linejoin="round"/><circle cx="136" cy="156" fill="#344956" r="3.2"/><circle cx="137" cy="155" fill="white" r="1"/><path d="M144 151 Q149 159 144 168" fill="none" stroke="#7b9aab" stroke-width="2"/></g>
+ <g aria-hidden="true" id="peb-toy-ball"><circle cx="160" cy="196" fill="#f2c56d" r="14" stroke="#354955" stroke-width="3"/><path d="M151 185 Q165 195 154 206 M165 185 Q153 196 167 204" fill="none" stroke="#f9f5e8" stroke-width="3"/></g>
+</g>
+<g id="peb-emote" opacity="0" transform="translate(95 24)"><path d="M0 -17 L4 -5 L17 -4 L7 4 L10 17 L0 10 L-10 17 L-7 4 L-17 -4 L-4 -5Z" fill="#f2d8ad" stroke="#526b7b" stroke-width="2"/></g>
+</svg>
+
+    </div>
+    <nav class="motion-rail motion-left" aria-label="Playful moves">
+      <button type="button" class="move-btn" id="waveAction" aria-label="Make Pebble wave"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 15V6a1.5 1.5 0 0 1 3 0v6-8a1.5 1.5 0 0 1 3 0v8-6a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6c0 5-3 8-8 8-3 0-5-2-7-5l-3-4c-1-2 1-4 3-2l3 4Z"/></svg><span>Wave</span></button>
+      <button type="button" class="move-btn" id="danceAction" aria-label="Make Pebble dance"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 19V5l12-2v13"/><circle cx="5" cy="19" r="3"/><circle cx="17" cy="16" r="3"/></svg><span>Dance</span></button>
+    </nav>
+    <nav class="motion-rail motion-right" aria-label="More reactions">
+      <button type="button" class="move-btn" id="highfiveAction" aria-label="Give Pebble a high five"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.4 4.3L18 9l-4.6 1.7L12 15l-1.4-4.3L6 9l4.6-1.7L12 3Z"/><path d="M5 14l1 2.2L8 17l-2 .8L5 20l-1-2.2L2 17l2-.8L5 14Zm12 4 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z"/></svg><span>High five</span></button>
+      <button type="button" class="move-btn" id="peekAction" aria-label="Make Pebble peek around"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>Peek</span></button>
+    </nav>
+  </main>
+  <div class="voice-actions" aria-label="Pebble voice lines"><button type="button" id="sayWake" class="voice-chip">🔊 Bro, wake up!</button><button type="button" id="sayRandom" class="voice-chip voice-chip-alt">Surprise me ↻</button></div>
+  <section class="panel" aria-label="Play controls"><div class="status-line"><div class="status" id="status"><span class="dot" aria-hidden="true"></span><span id="status-text">Ready to play</span></div><div class="mic-note" id="mic-note">Mic needs HTTPS or localhost</div></div>
+    <nav class="toolbar" aria-label="Character interactions">
+      <button class="tool primary" id="mic" type="button" aria-label="Turn on microphone to talk to Pebble" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg><span>Talk</span></button>
+      <button class="tool" id="food" type="button" aria-label="Feed Pebble a fish"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12c4-7 11-7 16 0-5 7-12 7-16 0ZM19 12l3-5v10z"/><circle cx="8" cy="11" r=".7" fill="currentColor"/></svg><span>Food</span></button>
+      <button class="tool" id="toy" type="button" aria-label="Play ball with Pebble"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5 6l14 12M18 5L6 19"/></svg><span>Toy</span></button>
+      <button class="tool" id="mute" type="button" aria-label="Mute sounds" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zM17 9c2 2 2 4 0 6"/></svg><span id="mute-label">Sound</span></button>
+      <button class="tool" id="settingsBtn" type="button" aria-label="Open settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l-2 2a1.6 1.6 0 0 0-1.8-.3l-1 .4a1.6 1.6 0 0 0-1 1.4v.7h-3v-.7a1.6 1.6 0 0 0-1-1.4l-1-.4a1.6 1.6 0 0 0-1.8.3l-2-2A1.6 1.6 0 0 0 4.4 15l-.4-1a1.6 1.6 0 0 0-1.4-1H2v-3h.6a1.6 1.6 0 0 0 1.4-1l.4-1A1.6 1.6 0 0 0 4 6.2l2.2-2a1.6 1.6 0 0 0 1.8.3l1-.4a1.6 1.6 0 0 0 1-1.4V2h3v.7a1.6 1.6 0 0 0 1 1.4l1 .4a1.6 1.6 0 0 0 1.8-.3l2 2a1.6 1.6 0 0 0-.3 1.8l.4 1a1.6 1.6 0 0 0 1.4 1h.7v3h-.7a1.6 1.6 0 0 0-1.4 1z"/></svg><span>Settings</span></button>
+    </nav>
+  </section>
+  <footer class="mini-footer">Voice stays on your device. Mic permission is requested when you tap Talk.</footer>
+</div>
+<div class="backdrop" id="settingsOverlay" hidden><section class="settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">Pebble's settings</h2><button class="close" id="closeSettings" aria-label="Close settings">×</button></div><div class="field"><label for="pitch">Funny voice · pitch &amp; speed <output id="pitchValue">1.7×</output></label><input id="pitch" type="range" min="1.0" max="2.2" step="0.1" value="1.7"></div><div class="field"><label for="volume">Volume <output id="volumeValue">80%</output></label><input id="volume" type="range" min="0" max="100" step="5" value="80"></div><div class="field"><label for="sensitivity">Microphone sensitivity <output id="sensitivityValue">Normal</output></label><input id="sensitivity" type="range" min="0.012" max="0.080" step="0.004" value="0.028"></div><small>Speak after turning Talk on. Pebble repeats after roughly 600ms of silence. Use headphones if speakers trigger your mic. No audio is uploaded. A browser microphone works only on HTTPS or localhost. Your browser may also require that this page be served rather than opened directly from a file.</small></section></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+'use strict';
+// ============================================================
+// AUDIO ENGINE — microphone capture, voice activity, playback
+// ============================================================
+const $ = id => document.getElementById(id);
+const world=$('world'),bubble=$('bubble'),statusText=$('status-text'),status=$('status'),character=$('character'),sparks=$('sparks');
+const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let audioCtx=null, master=null, micStream=null, micSource=null, micAnalyser=null, micFrame=null;
+let recorder=null, chunks=[], recording=false, recordStarted=0, lastVoice=0, speechFrames=0, voicePlaying=false;
+let voiceSource=null, voiceAnalyser=null, voiceFrame=null, playbackElement=null, playbackURL=null;
+let micEnabled=false, muted=false, pitch=1.7, volume=.8, threshold=.028;
+let toastTimer=null, actionTimer=null, mood='idle', activityAt=Date.now(), idleTimer=null, pokes=[];
+let eventToken=0, previousFocus=null, micGeneration=0, playTimeout=null, fallbackTimeout=null;
+// Spoken lines use built-in browser synthesis: no remote APIs or audio assets.
+const wakeLines=[
+ {line:'Bro, wake up! The snooze button is not your bestie!',mood:'excited'},
+ {line:'Bro! The bed is comfy, but you have places to be!',mood:'surprised'},
+ {line:'Rise and shine, legend! I believe in you!',mood:'happy'},
+ {line:'Good morning! I have zero thumbs and I still got up!',mood:'smug'},
+ {line:'Wakey wakey! Your alarm clock called me for backup!',mood:'excited'},
+ {line:'Oh, you are awake? Took you long enough!',mood:'smug'},
+ {line:'If you get up now, I will share my emergency fish!',mood:'shy'},
+ {line:'Listen here, sleepyhead. You got this!',mood:'happy'},
+ {line:'I could nap all day, but somebody has to be responsible!',mood:'yawning'},
+ {line:'No more five more minutes, bro!',mood:'angry'},
+ {line:'The floor is not lava. You can get out of bed!',mood:'laughing'},
+ {line:'Plot twist! You actually got up on time!',mood:'surprised'}
+];
+let lastLine=-1, synthUtterance=null, synthTimer=null, synthMouthTimer=null, synthActive=false, synthEpoch=0, voiceList=[], micMuteUntil=0;
+
+function touchActivity(){activityAt=Date.now();if(mood==='sleeping')setMood('surprised','Oh! Hi again!');}
+function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3400);}
+function setStatus(text,active=false){statusText.textContent=text;status.dataset.active=String(active);}
+function setMood(next,message){mood=next;world.dataset.mood=next;if(message)bubble.textContent=message;}
+function action(next,message,duration=1250){touchActivity();stopAction();const ticket=++eventToken;setMood(next,message);actionTimer=setTimeout(()=>{if(ticket===eventToken&&!voicePlaying)setMood(micEnabled?'listening':'idle',micEnabled?'Say something!':'Psst… poke my belly!');},duration);}
+function stopAction(){clearTimeout(actionTimer);eventToken++;}
+async function ensureAudio(){if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();master=audioCtx.createGain();master.gain.value=muted?0:volume;master.connect(audioCtx.destination)}if(audioCtx.state==='suspended')await audioCtx.resume();return audioCtx;}
+function setVolume(){if(master&&audioCtx)master.gain.setTargetAtTime(muted?0:volume,audioCtx.currentTime,.025)}
+function beep(freq=440,duration=.12,wave='sine',gain=.14,delay=0){if(muted||!audioCtx)return;const t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=wave;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.001,gain),t+.016);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g).connect(master);o.start(t);o.stop(t+duration+.01);o.onended=()=>{o.disconnect();g.disconnect()};}
+function sfx(type){if(!audioCtx||muted)return;if(type==='giggle'){[520,675,540,770].forEach((f,i)=>beep(f,.11,'sine',.15,i*.095))}if(type==='angry'){beep(165,.27,'sawtooth',.12);beep(135,.22,'triangle',.11,.17)}if(type==='dizzy'){[610,480,350,250].forEach((f,i)=>beep(f,.17,'triangle',.13,i*.12))}if(type==='purr'){[155,160,153,164,155].forEach((f,i)=>beep(f,.11,'triangle',.075,i*.1))}if(type==='burp'){beep(110,.29,'sawtooth',.16);beep(85,.3,'triangle',.1,.17)}if(type==='boing'){[310,420,560,350].forEach((f,i)=>beep(f,.12,'sine',.16,i*.10))}if(type==='bite'){beep(320,.08,'triangle',.09);beep(265,.1,'triangle',.1,.14)}}
+function measure(analyser,buffer){analyser.getFloatTimeDomainData(buffer);let sum=0;for(let i=0;i<buffer.length;i++){const v=buffer[i];sum+=v*v;}return Math.sqrt(sum/buffer.length)}
+function supportedMic(){return !!(navigator.mediaDevices?.getUserMedia&&window.MediaRecorder&&(window.AudioContext||window.webkitAudioContext))}
+async function toggleMic(){touchActivity();if(micEnabled){disableMic();toast('Microphone off');return;}if(!supportedMic()){toast('This browser does not support recording. You can still play with Pebble!');return;}if(!window.isSecureContext){toast('Microphone needs HTTPS or localhost. The other interactions still work.');return;}
+ $('mic').disabled=true;
+ try{await ensureAudio();micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});micSource=audioCtx.createMediaStreamSource(micStream);micAnalyser=audioCtx.createAnalyser();micAnalyser.fftSize=1024;micAnalyser.smoothingTimeConstant=.35;micSource.connect(micAnalyser);micEnabled=true;$('mic').setAttribute('aria-pressed','true');$('mic').setAttribute('aria-label','Turn off microphone');setMood('listening','I’m all ears!');setStatus('Listening…',true);$('mic-note').textContent='Speak now · pauses trigger replay';micLoop();}catch(e){disableMic();toast(e.name==='NotAllowedError'?'Microphone blocked. Enable it in browser settings to try again.':`Could not start microphone: ${e.message||e.name}`)}finally{$('mic').disabled=false;}
+}
+function createRecorder(){if(!micStream)return null;const types=['audio/webm;codecs=opus','audio/mp4','audio/webm',''];let chosen=types.find(t=>!t||MediaRecorder.isTypeSupported(t));try{return new MediaRecorder(micStream,chosen?{mimeType:chosen}:undefined)}catch{return new MediaRecorder(micStream)}}
+function startRecording(){if(recording||!micEnabled||voicePlaying||synthActive)return;try{recorder=createRecorder();chunks=[];recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};recorder.onerror=()=>{recording=false;setStatus('Recording error');};const recordingGeneration=micGeneration;const currentRecorder=recorder;recorder.onstop=()=>{const blob=new Blob(chunks,{type:currentRecorder.mimeType||chunks[0]?.type||'audio/webm'});chunks=[];recording=false;if(recordingGeneration!==micGeneration)return;if(blob.size>500&&micEnabled)playVoice(blob);else if(micEnabled)setMood('listening','Let me hear you!')};recorder.start();recording=true;recordStarted=performance.now();lastVoice=recordStarted;setMood('listening','I’m listening…');setStatus('Recording your voice…',true)}catch(e){toast('Recording could not start');recording=false;}}
+function endRecording(){if(recorder&&recorder.state==='recording'){try{recorder.stop()}catch{recording=false;}}}
+const micRMS=new Float32Array(1024);
+function micLoop(){cancelAnimationFrame(micFrame);let lastTick=0;function tick(now){if(!micEnabled)return;micFrame=requestAnimationFrame(tick);if(now-lastTick<35)return;lastTick=now;if(voicePlaying||synthActive||now<micMuteUntil||!micAnalyser)return;const rms=measure(micAnalyser,micRMS);if(rms>threshold){speechFrames++;lastVoice=now;activityAt=Date.now();if(mood==='sleeping')setMood('listening','You woke me up!');if(!recording&&speechFrames>=2)startRecording();}else{speechFrames=0;if(recording&&now-lastVoice>600&&now-recordStarted>220)endRecording();}if(recording&&now-recordStarted>9000)endRecording();if(micEnabled&&!recording&&mood==='idle')setMood('listening','Say something!');}micFrame=requestAnimationFrame(tick);}
+async function playVoice(blob){if(!micEnabled||synthActive)return;voicePlaying=true;$('sayWake').disabled=true;$('sayRandom').disabled=true;setMood('talking','Hehe! That’s what you sound like!');setStatus('Pebble is talking!',true);const thisToken=++eventToken;try{await ensureAudio();const bytes=await blob.arrayBuffer();if(!micEnabled)return;let decoded;try{decoded=await audioCtx.decodeAudioData(bytes.slice(0))}catch{decoded=null}if(decoded){await playAudioBuffer(decoded,thisToken)}else{await playAudioBlob(blob,thisToken)}}catch(e){toast('Could not replay this recording');}finally{voicePlaying=false;cleanupPlayback();$('sayWake').disabled=false;$('sayRandom').disabled=false;if(micEnabled){setMood('listening','Your turn!');setStatus('Listening…',true);}else{setMood('idle','Come play again!');setStatus('Ready to play');}}}
+function playAudioBuffer(buffer,token){return new Promise(resolve=>{if(!micEnabled){resolve();return}const source=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),boost=audioCtx.createGain(),analyser=audioCtx.createAnalyser();source.buffer=buffer;source.playbackRate.value=pitch;filter.type='highpass';filter.frequency.value=180;boost.gain.value=1.10;analyser.fftSize=512;source.connect(filter).connect(boost).connect(analyser).connect(master);voiceSource=source;voiceAnalyser=analyser;const duration=buffer.duration/pitch;let finished=false;const end=()=>{if(finished)return;finished=true;clearTimeout(playTimeout);resolve()};source.onended=end;source.start();mouthLoop();playTimeout=setTimeout(end,Math.ceil(duration*1000)+800)})}
+function playAudioBlob(blob,token){return new Promise((resolve,reject)=>{playbackURL=URL.createObjectURL(blob);const el=new Audio(playbackURL);playbackElement=el;el.playbackRate=pitch;el.preservesPitch=false;el.mozPreservesPitch=false;el.webkitPreservesPitch=false;el.onended=resolve;el.onerror=()=>reject(new Error('Playback not supported'));const source=audioCtx.createMediaElementSource(el),filter=audioCtx.createBiquadFilter(),analyser=audioCtx.createAnalyser();filter.type='highpass';filter.frequency.value=180;analyser.fftSize=512;source.connect(filter).connect(analyser).connect(master);voiceAnalyser=analyser;mouthLoop();el.play().catch(reject);fallbackTimeout=setTimeout(resolve,11000)})}
+function mouthLoop(){cancelAnimationFrame(voiceFrame);const buf=new Float32Array(512),mouth=$('peb-open-mouth');function tick(){if(!voicePlaying||!voiceAnalyser){mouth.setAttribute('ry','4');return;}const rms=measure(voiceAnalyser,buf);mouth.setAttribute('ry',String(Math.min(13,Math.max(3,3+rms*78))));mouth.setAttribute('rx',String(Math.min(11,7+rms*20)));voiceFrame=requestAnimationFrame(tick)}voiceFrame=requestAnimationFrame(tick)}
+function cleanupPlayback(){clearTimeout(playTimeout);clearTimeout(fallbackTimeout);playTimeout=fallbackTimeout=null;cancelAnimationFrame(voiceFrame);$('peb-open-mouth').setAttribute('ry','4');if(playbackElement){playbackElement.pause();playbackElement.src='';playbackElement=null}if(voiceSource){try{voiceSource.stop()}catch{}try{voiceSource.disconnect()}catch{}voiceSource=null}if(voiceAnalyser){try{voiceAnalyser.disconnect()}catch{}voiceAnalyser=null}if(playbackURL){URL.revokeObjectURL(playbackURL);playbackURL=null}}
+function disableMic(){micGeneration++;micEnabled=false;cancelAnimationFrame(micFrame);try{if(recorder?.state==='recording')recorder.stop()}catch{}recorder=null;recording=false;chunks=[];cleanupPlayback();voicePlaying=false;try{micSource?.disconnect()}catch{}try{micAnalyser?.disconnect()}catch{}micSource=micAnalyser=null;if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null}$('mic').setAttribute('aria-pressed','false');$('mic').setAttribute('aria-label','Turn on microphone to talk to Pebble');$('mic-note').textContent='Mic needs HTTPS or localhost';setMood('idle','Come play again!');setStatus('Ready to play');}
+// ============================================================
+// CHARACTER SPEECH — local speech synthesis + mouth motion
+// ============================================================
+function cancelCharacterSpeech(){
+ ++synthEpoch;clearTimeout(synthTimer);clearInterval(synthMouthTimer);synthMouthTimer=null;
+ synthActive=false;synthUtterance=null;
+ $('peb-open-mouth').setAttribute('ry','4');$('peb-open-mouth').setAttribute('opacity','0');world.dataset.speaking='false';micMuteUntil=performance.now()+850;
+ try{window.speechSynthesis?.cancel()}catch{}
+ $('sayWake').disabled=false;$('sayRandom').disabled=false;
+}
+function chooseSpeechVoice(){
+ if(!('speechSynthesis' in window))return null;
+ voiceList=window.speechSynthesis.getVoices();
+ const english=voiceList.filter(v=>/^en([-_]|$)/i.test(v.lang));
+ return english.find(v=>/samantha|ava|zira|jenny|google us english/i.test(v.name))||english[0]||null;
+}
+function sayLine(line,moodForLine='excited'){
+ touchActivity();
+ if(muted){toast('Unmute Sound to hear Pebble!');return;}
+ if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window)){
+  action(moodForLine,line,2100);toast('This browser does not support spoken lines.');return;
+ }
+ // Never transmit voice data or trigger the microphone while Pebble speaks.
+ if(recording){toast('Finish talking first so Pebble can answer!');return;}
+ if(voicePlaying){toast('Pebble is repeating your voice. Try again after!');return;}
+ cancelCharacterSpeech();stopAction();
+ const epoch=synthEpoch;const u=new SpeechSynthesisUtterance(line);synthUtterance=u;
+ u.lang='en-US';u.rate=Math.min(1.45,Math.max(.75,1.05+(pitch-1.7)*.3));u.pitch=Math.min(2,Math.max(.7,1.45+(pitch-1.7)*.45));
+ u.volume=Math.min(1,Math.max(0,volume));
+ const selected=chooseSpeechVoice();if(selected)u.voice=selected;
+ synthActive=true;world.dataset.speaking='true';setMood(moodForLine,line);setStatus('Pebble is speaking!',true);
+ $('sayWake').disabled=true;$('sayRandom').disabled=true;
+ const mouth=$('peb-open-mouth');const first=Date.now();
+ synthMouthTimer=setInterval(()=>{
+  if(!synthActive||epoch!==synthEpoch)return;
+  const phase=(Date.now()-first)/105;
+  mouth.setAttribute('opacity','1');
+  mouth.setAttribute('ry',String(4+Math.abs(Math.sin(phase))*7));
+  mouth.setAttribute('rx',String(7+Math.abs(Math.cos(phase*.72))*2));
+ },75);
+ const finish=()=>{
+  if(epoch!==synthEpoch)return;
+  clearTimeout(synthTimer);clearInterval(synthMouthTimer);synthMouthTimer=null;synthActive=false;synthUtterance=null;
+  mouth.setAttribute('opacity','0');mouth.setAttribute('ry','4');world.dataset.speaking='false';micMuteUntil=performance.now()+850;
+  $('sayWake').disabled=false;$('sayRandom').disabled=false;
+  setMood(micEnabled?'listening':'idle',micEnabled?'Your turn!':'Tap me for more!');
+  setStatus(micEnabled?'Listening…':'Ready to play',micEnabled);
+ };
+ u.onend=finish;u.onerror=finish;
+ // Defensive timeout for browsers that omit speechSynthesis.onend.
+ synthTimer=setTimeout(finish,Math.max(4200,line.length*125+3500));
+ try{window.speechSynthesis.cancel();window.speechSynthesis.speak(u)}catch{finish();toast('Could not play speech in this browser')}
+}
+function randomLine(){let index=Math.floor(Math.random()*wakeLines.length);if(index===lastLine)index=(index+1)%wakeLines.length;lastLine=index;const item=wakeLines[index];sayLine(item.line,item.mood)}
+// ============================================================
+// CHARACTER STATE MACHINE — idle, speaking, reactions, sleep
+// ============================================================
+function burst(symbol='♥',count=7){if(reducedMotion)return;const rect=character.getBoundingClientRect();for(let i=0;i<count;i++){const el=document.createElement('span');el.className='spark';el.textContent=symbol;el.style.left=`${rect.left+rect.width*(.2+Math.random()*.6)}px`;el.style.top=`${rect.top+rect.height*(.2+Math.random()*.45)}px`;el.style.setProperty('--dx',`${(Math.random()-.5)*155}px`);el.style.setProperty('--dy',`${-35-Math.random()*95}px`);sparks.appendChild(el);el.addEventListener('animationend',()=>el.remove(),{once:true});setTimeout(()=>el.remove(),1200)}}
+function effect(type,meta={}){
+ window.dispatchEvent(new CustomEvent('pebble:react',{detail:{type,...meta}}));
+ if(synthActive)cancelCharacterSpeech();touchActivity();void ensureAudio().catch(()=>{});
+ if(type==='belly'){action('laughing','Eee! That tickles!',1250);sfx('giggle');burst('♥',7)}
+ else if(type==='head'){const now=Date.now();pokes=pokes.filter(t=>now-t<3900);pokes.push(now);if(pokes.length>=6){action('dizzy','Whoa… dizzy stars!',1650);sfx('dizzy');burst('✦',9);pokes=[]}else if(pokes.length>=3){action('angry','HEY! My hairdo!',1050);sfx('angry');burst('💢',3)}else{action('surprised','Oi! Watch the feathers!',800);beep(240,.09,'square',.09)}}
+ else if(type==='pet'){action('shy','Awww, more head pats!',1600);sfx('purr');burst('♥',7)}
+ else if(type==='cuddle'){action('cuddling','Penguin hugs! ♡',1850);sfx('purr');burst('♥',9)}
+ else if(type==='food'){action('eating','Nom nom nom…',1700);sfx('bite');burst('🐟',4);setTimeout(()=>{if(world.dataset.mood==='eating')sfx('burp')},1050)}
+ else if(type==='toy'){action('toying','CATCH!',1950);sfx('boing');burst('●',5)}
+ else if(type==='swipe'){action('dizzy','Wheeeee!',1250);sfx('boing');burst('✦',6)}
+ else if(type==='wave'){action('waving','Hi hi! Over here!',1750);beep(640,.09,'sine',.10);burst('✧',5)}
+ else if(type==='dance'){action('dancing','Look at my happy feet!',2550);sfx('boing');burst('♫',7)}
+ else if(type==='highfive'){action('highfive','UP TOP! ✋',1200);beep(740,.13,'sine',.13);burst('✦',7)}
+ else if(type==='peek'){action('peeking','I seeeeee you!',1550);beep(460,.11,'sine',.07)}
+}
+let down=null,holdTimer=null,activePointer=null;
+function clearHold(){clearTimeout(holdTimer);holdTimer=null;}
+character.addEventListener('pointerdown',e=>{
+ if(e.button!==0||down)return;
+ touchActivity();const hit=e.target.closest?.('.hit-zone');
+ down={x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,t:performance.now(),zone:hit?.id||'body',travel:0,longPress:false,id:e.pointerId};
+ activePointer=e.pointerId;
+ try{character.setPointerCapture(e.pointerId)}catch{}
+ if(down.zone==='peb-head-hit'||down.zone==='peb-belly-hit'||(down.zone==='body'&&e.target.closest?.('svg'))){
+   const captured=down;
+   holdTimer=setTimeout(()=>{if(down!==captured||down.travel>18)return;down.longPress=true;effect('cuddle')},540);
+ }
+});
+character.addEventListener('pointermove',e=>{
+ if(!down||e.pointerId!==activePointer)return;
+ down.travel+=Math.hypot(e.clientX-down.lastX,e.clientY-down.lastY);
+ down.lastX=e.clientX;down.lastY=e.clientY;
+ if(down.travel>18)clearHold();
+});
+character.addEventListener('pointerup',e=>{
+ if(!down||e.pointerId!==activePointer)return;
+ clearHold();const d=down;down=null;activePointer=null;
+ if(d.longPress)return;
+ const delta=Math.hypot(e.clientX-d.x,e.clientY-d.y);
+ if(d.zone==='peb-wing-left-hit'||d.zone==='peb-wing-right-hit'){
+   effect(delta>25?'wave':'highfive',{side:d.zone==='peb-wing-left-hit'?'left':'right'});
+ }else if(d.zone==='peb-head-hit'&&d.travel>28&&delta<155){effect('pet')}
+ else if(delta>68){effect('swipe')}
+ else if(d.zone==='peb-head-hit'){effect('head')}
+ else {effect('belly')}
+});
+character.addEventListener('pointercancel',()=>{clearHold();down=null;activePointer=null});
+character.addEventListener('lostpointercapture',()=>{clearHold();down=null;activePointer=null});
+character.addEventListener('dragstart',e=>e.preventDefault());
+function idleRoutine(){
+ if(document.hidden||reducedMotion||down)return;
+ const elapsed=Date.now()-activityAt;
+ if(voicePlaying||recording||synthActive)return;
+ if(elapsed>68000){if(mood!=='sleeping')setMood('sleeping','Shhh… tiny penguin nap.');return;}
+ if(elapsed<3000||!['idle','listening'].includes(mood))return;
+ const choice=Math.random();
+ const next=choice<.19?['winking','Did you see that wink?',850]:
+            choice<.40?['curious','Whatcha doing over there?',1050]:
+            choice<.57?['stretching','Little flipper stretch!',1400]:
+            choice<.74?['waving','Hiiii! ♡',1250]:
+            choice<.87?['smug','Just vibing…',1000]:
+                         ['yawning','*tiny penguin yawn*',1250];
+ const [nextMood,message,duration]=next;
+ setMood(nextMood,message);
+ setTimeout(()=>{if(mood===nextMood&&!synthActive&&!voicePlaying)setMood(micEnabled?'listening':'idle',micEnabled?'I’m listening…':'Psst… poke my belly!')},duration);
+}
+function scheduleIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(()=>{idleRoutine();scheduleIdle()},2800+Math.random()*1700)}scheduleIdle();
+// ============================================================
+// INPUT HANDLERS — microphone, food, toy, volume, settings
+// ============================================================
+$('sayWake').addEventListener('click',()=>sayLine('Bro, wake up! Your morning mission starts now!','excited'));$('sayRandom').addEventListener('click',randomLine);
+$('waveAction').addEventListener('click',()=>effect('wave'));$('danceAction').addEventListener('click',()=>effect('dance'));$('highfiveAction').addEventListener('click',()=>effect('highfive'));$('peekAction').addEventListener('click',()=>effect('peek'));
+$('mic').addEventListener('click',toggleMic);$('food').addEventListener('click',()=>effect('food'));$('toy').addEventListener('click',()=>effect('toy'));
+$('mute').addEventListener('click',()=>{touchActivity();muted=!muted;if(muted&&synthActive){cancelCharacterSpeech();setMood(micEnabled?'listening':'idle','Sound is muted.');}setVolume();$('mute').setAttribute('aria-pressed',String(muted));$('mute').setAttribute('aria-label',muted?'Unmute sounds':'Mute sounds');$('mute-label').textContent=muted?'Muted':'Sound';toast(muted?'Sounds muted':'Sounds on')});
+$('pitch').addEventListener('input',e=>{pitch=Number(e.target.value);$('pitchValue').textContent=`${pitch.toFixed(1)}×`});$('volume').addEventListener('input',e=>{volume=Number(e.target.value)/100;$('volumeValue').textContent=`${Math.round(volume*100)}%`;setVolume()});$('sensitivity').addEventListener('input',e=>{threshold=Number(e.target.value);$('sensitivityValue').textContent=threshold<.022?'High':threshold>.048?'Low':'Normal'});
+const overlay=$('settingsOverlay');function closeSettings(){overlay.hidden=true;previousFocus?.focus()}$('settingsBtn').addEventListener('click',()=>{touchActivity();previousFocus=document.activeElement;overlay.hidden=false;$('closeSettings').focus()});$('closeSettings').addEventListener('click',closeSettings);overlay.addEventListener('click',e=>{if(e.target===overlay)closeSettings()});document.addEventListener('keydown',e=>{if(overlay.hidden)return;if(e.key==='Escape')closeSettings();if(e.key==='Tab'){const items=[...overlay.querySelectorAll('button,input')],first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
+// Ambient fog responds to pointer motion without moving controls.
+let fogFrame=0;window.addEventListener('pointermove',e=>{if(reducedMotion||fogFrame)return;fogFrame=requestAnimationFrame(()=>{$('fog').style.setProperty('--fx',`${Math.round((e.clientX/window.innerWidth-.5)*30)}px`);fogFrame=0})},{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(recording)endRecording();if(synthActive)cancelCharacterSpeech();if(micEnabled){disableMic();toast('Microphone paused while app is in background. Tap Talk to resume.');}}else{activityAt=Date.now();}});window.addEventListener('pagehide',()=>{cancelCharacterSpeech();disableMic();if(audioCtx&&audioCtx.state!=='closed')audioCtx.close().catch(()=>{});clearTimeout(idleTimer);clearTimeout(actionTimer)});
+</script>
+<script>
+// ============================================================
+// SNOOZELOSE EMBEDDED HOST ADAPTER - UI behavior only.
+// Alarm scheduling/dismissal is never controlled by this module.
+// ============================================================
+(function(){
+ const commands=new Set(['wake','surprise','dance','wave','food','toy','mic','mute','settings','stop','configure']);
+ function stopPet(){
+   try{cancelCharacterSpeech()}catch(_){}
+   try{disableMic()}catch(_){}
+   try{cleanupPlayback()}catch(_){}
+   try{clearTimeout(actionTimer);setMood('idle','See you soon!')}catch(_){}
+ }
+ window.addEventListener('message',function(e){
+   if(e.source!==window.parent||!e.data||e.data.kind!=='snoozelose-pebble')return;
+   const command=e.data.command;
+   if(!commands.has(command))return;
+   if(command==='stop'){stopPet();return;}
+   // Preserve the existing SnoozeLose parent settings panel without changing it.
+   if(command==='configure'){
+     const values=e.data.value;
+     if(values && typeof values==='object'){
+       for(const [name,id] of Object.entries({pitch:'pitch',volume:'volume',sensitivity:'sensitivity'})){
+         const raw=values[name],control=document.getElementById(id);
+         if(!control||typeof raw!=='number'||!Number.isFinite(raw))continue;
+         const min=Number(control.min),max=Number(control.max);
+         control.value=String(Math.min(max,Math.max(min,raw)));
+         control.dispatchEvent(new Event('input',{bubbles:true}));
+       }
+     }
+     return;
+   }
+   const buttons={wake:'sayWake',surprise:'sayRandom',food:'food',toy:'toy',mic:'mic',mute:'mute',settings:'settingsBtn'};
+   if(buttons[command])document.getElementById(buttons[command])?.click();
+   else if(command==='dance')effect('dance')
+   else if(command==='wave')effect('wave')
+ });
+ // Release mic/audio when the page is backgrounded. Wake up only after explicit input.
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPet()});
+ window.addEventListener('pagehide',stopPet);
+})();
+</script><script>
+/*
+ * PEBBLE EXPRESSIVE MOTION RIG v1.7
+ * Grounded feet. Spring-controlled joints. Brief, coherent action choreography.
+ * Pointer tracking, direct flipper manipulation, idle gestures, reduced-motion safe.
+ */
+(()=>{'use strict';
+ const svg=document.getElementById('pebble-svg'),world=document.getElementById('world'),actor=document.getElementById('character');
+ if(!svg||!world||!actor||window.PebbleMotion)return;
+ const el=id=>svg.querySelector('#'+id);
+ const joints={rig:el('peb-rig'),head:el('peb-head'),body:el('peb-body'),
+  wingL:el('peb-wing-left'),wingR:el('peb-wing-right'),footL:el('peb-foot-left'),
+  footR:el('peb-foot-right'),fish:el('peb-fish'),ball:el('peb-toy-ball'),tail:el('peb-scarf-tail')};
+ if(Object.values(joints).some(x=>!x))return;
+ const eyes=[el('peb-eye-left'),el('peb-eye-right')],pupils=[...svg.querySelectorAll('.peb-pupil-unit')];
+ const shadow=svg.querySelector('.peb-shadow'),blink=el('peb-blink');
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
+ const sin=Math.sin,cos=Math.cos,PI=Math.PI;
+ const pivot={rig:[98,174],head:[98,145],body:[98,180],wingL:[55,134],
+  wingR:[141,134],footL:[87,209],footR:[109,209],fish:[149,159],ball:[160,196],tail:[97,159]};
+ const freqs={rig:13,body:14,head:16,wingL:18,wingR:18,footL:20,footR:20,fish:17,ball:15,tail:13};
+ const fields=['x','y','r','sx','sy'],state={};
+ for(const key of Object.keys(joints))state[key]={x:0,y:0,r:0,sx:1,sy:1,vx:0,vy:0,vr:0,vsx:0,vsy:0};
+ const poses={
+  idle:{h:0,l:0,r:0,lean:0},listening:{h:-2,l:4,r:-5,lean:-.4},
+  talking:{h:-2,l:7,r:-10,lean:.5},happy:{h:4,l:17,r:-17,lean:1.2},
+  laughing:{h:5,l:20,r:-20,lean:-.5},excited:{h:-3,l:22,r:-23,lean:1},
+  surprised:{h:-7,l:11,r:-11,lean:-1},angry:{h:-5,l:-8,r:9,lean:-1.7},
+  dizzy:{h:3,l:8,r:-8,lean:.5},shy:{h:7,l:-6,r:6,lean:1.5},
+  smug:{h:-4,l:5,r:-3,lean:-.7},yawning:{h:5,l:-1,r:3,lean:1},
+  sleeping:{h:4,l:-3,r:3,lean:0},eating:{h:4,l:3,r:-14,lean:1},
+  toying:{h:-3,l:9,r:-21,lean:-.6},playing:{h:2,l:15,r:-14,lean:1},
+  waving:{h:-4,l:7,r:-29,lean:-1},dancing:{h:2,l:18,r:-19,lean:0},
+  highfive:{h:-5,l:7,r:-32,lean:-1},peeking:{h:-8,l:5,r:-8,lean:1},
+  winking:{h:-2,l:7,r:-5,lean:1},cuddling:{h:6,l:-10,r:11,lean:1.2},
+  curious:{h:-8,l:5,r:-6,lean:1},stretching:{h:-5,l:26,r:-27,lean:-.8}
+ };
+ let raf=0,disposed=false,lastTime=0,elapsed=0,phaseStart=0,current=world.dataset.mood||'idle';
+ let dt=.016,held=false,heldZone='',downX=0,downY=0,dragX=0,dragY=0;
+ let cursor={inside:false,x:0,y:0},look={x:0,y:0},gaze={x:0,y:0},nextLook=0;
+ let nextBlink=1.65,blinkAt=-10,nextFidget=1.8,fidgetAt=-10,fidgetKind=0;
+ let impulseAt=-10,impulseType='',activeSide='right',faceWakeTime=-10;
+ const ramp=t=>{t=clamp(t,0,1);return t*t*(3-2*t)};
+ const wave=(t,a,b)=>sin(t*2*PI*a+b);
+ const actionEnvelope=(age,start,end,fade=.22)=>ramp((age-start)/fade)*(1-ramp((age-end+fade)/fade));
+ function spring(key,goal){
+  const s=state[key],node=joints[key],[px,py]=pivot[key];
+  // Implicit critically damped spring integration avoids FPS-dependent overshoot.
+  const omega=freqs[key],f=1+2*dt*omega,oo=omega*omega,h=dt*oo,hh=dt*h,inv=1/(f+hh);
+  for(const axis of fields){const v='v'+axis;const target=goal[axis]??(axis[0]==='s'?1:0);
+   const p=s[axis],vel=s[v];s[axis]=(f*p+dt*vel+hh*target)*inv;s[v]=(vel+h*(target-p))*inv;}
+  node.setAttribute('transform',`translate(${s.x.toFixed(2)} ${s.y.toFixed(2)}) translate(${px} ${py}) rotate(${s.r.toFixed(2)}) scale(${s.sx.toFixed(4)} ${s.sy.toFixed(4)}) translate(${-px} ${-py})`);
+ }
+ function reset(){
+  for(const [key,node] of Object.entries(joints)){node.removeAttribute('transform');const s=state[key];
+   for(const a of fields){s[a]=a[0]==='s'?1:0;s['v'+a]=0;}}
+  eyes.forEach(n=>n.removeAttribute('transform'));pupils.forEach(n=>n.removeAttribute('transform'));
+  blink.setAttribute('opacity','0');
+  if(shadow){shadow.setAttribute('rx','49');shadow.setAttribute('opacity','.22');}
+ }
+ function animate(now){
+  raf=0;if(disposed||document.hidden||reduced.matches)return;
+  dt=lastTime?clamp((now-lastTime)/1000,.001,.033):.016;lastTime=now;elapsed+=dt;
+  const m=world.dataset.mood||'idle';if(m!==current){current=m;phaseStart=elapsed;}
+  const age=elapsed-phaseStart,p=poses[m]||poses.idle;
+  const sleeping=m==='sleeping',talking=m==='talking'||world.dataset.speaking==='true';
+  const dance=m==='dancing',waving=m==='waving',highfive=m==='highfive';
+  const active=!sleeping;
+  if(active&&['idle','listening'].includes(m)&&!held&&elapsed>=nextFidget){
+   fidgetAt=elapsed;fidgetKind=Math.floor(Math.random()*4);nextFidget=elapsed+2.25+Math.random()*2.8;
+  }
+  const fidget=['idle','listening'].includes(m)?actionEnvelope(elapsed-fidgetAt,0,.95,.24):0;
+  const bodyBreath=sin(elapsed*(sleeping?1.6:2.35));
+  const greeting=actionEnvelope(age,0,.7,.16);
+  const activeEnergy=['excited','laughing','happy','toying','playing','stretching'].includes(m);
+  const react=activeEnergy?greeting:0;
+  const danceAmp=dance?actionEnvelope(age,0,2.47,.25):0;
+  const waveAmp=waving?actionEnvelope(age,0,1.63,.23):0;
+  const fiveAmp=highfive?actionEnvelope(age,.02,.95,.16):0;
+  const peekAmp=m==='peeking'?actionEnvelope(age,0,1.42,.2):0;
+  const hugAmp=m==='cuddling'?actionEnvelope(age,0,1.58,.24):0;
+  const curiousAmp=m==='curious'?actionEnvelope(age,0,.94,.16):0;
+  const pulse=actionEnvelope(elapsed-impulseAt,0,.46,.10);
+  const dancePhase=elapsed*11.4;
+  // When idle, micro-expressions are intentionally asymmetrical, not a repeated bounce.
+  let fidgetHead=0,fidgetL=0,fidgetR=0;
+  if(fidget){if(fidgetKind===0)fidgetHead=-4.5*fidget;
+   else if(fidgetKind===1){fidgetL=8*fidget;fidgetHead=2*fidget;}
+   else if(fidgetKind===2){fidgetR=-8*fidget;fidgetHead=-2*fidget;}
+   else fidgetHead=3*fidget;}
+  // More dramatic eye contact: gently leads the head, but not the body position.
+  if(!cursor.inside&&elapsed>nextLook){nextLook=elapsed+1.3+Math.random()*2.2;
+   look.x=(Math.random()-.5)*5.5;look.y=(Math.random()-.5)*3.2;}
+  const gx=cursor.inside?cursor.x*4:look.x,gy=cursor.inside?cursor.y*2.8:look.y;
+  const eyef=1-Math.exp(-dt*13);gaze.x+=(gx-gaze.x)*eyef;gaze.y+=(gy-gaze.y)*eyef;
+  const pointerLean=cursor.inside?cursor.x*1.1:0;
+  const dragLean=held?clamp(dragX*.043,-2.3,2.3):0;
+  const danceLean=danceAmp*sin(dancePhase)*1.7;
+  const sway=.65*sin(elapsed*1.36)+.32*sin(elapsed*.67+.8);
+  const lean=clamp(p.lean+sway*.47+pointerLean*.35+dragLean+danceLean,-4.2,4.2);
+  // No vertical locomotion of the foot assembly or broad rig shaking.
+  spring('rig',{x:lean*.28,y:-(react*.65+fiveAmp*.3),r:0});
+  const bob=danceAmp*1.1*wave(dancePhase,1/(2*PI),0)+react*.75+greeting*.24;
+  spring('body',{x:lean*.20,y:-.25*bodyBreath-bob,r:lean*.45+peekAmp*.4,
+   sx:1-.003*bodyBreath+.005*hugAmp,sy:1+.006*bodyBreath-.004*react});
+  let headTurn=p.h+fidgetHead+gaze.x*.85+lean*.30+sin(elapsed*1.45)*1.15;
+  headTurn+=danceAmp*(sin(dancePhase-.5)*3.2)-waveAmp*1.8+peekAmp*-4+curiousAmp*-2;
+  if(m==='dizzy')headTurn+=5.5*sin(elapsed*7.2);
+  if(talking)headTurn+=1.5*sin(elapsed*8.4);
+  if(held&&heldZone==='peb-head-hit')headTurn+=clamp(dragX*.1,-6,6);
+  spring('head',{x:lean*.22+gaze.x*.38,y:-.20*bodyBreath+gaze.y*.25+((talking)?sin(elapsed*7.2)*.35:0),
+   r:clamp(headTurn,-13.2,13.2)});
+  // Every shoulder keeps its anatomically correct pivot, with an intentional main gesture.
+  let angleL=p.l+1.9*sin(elapsed*2.15)+fidgetL,
+      angleR=p.r-1.9*sin(elapsed*2.15+.3)+fidgetR;
+  if(talking){angleL+=sin(elapsed*5.5)*4.2;angleR-=sin(elapsed*6.1+.9)*4.7;}
+  angleL+=react*(5+3*sin(age*12));angleR-=react*(5+3*sin(age*12+.7));
+  angleL+=danceAmp*(11+11*sin(dancePhase));angleR-=danceAmp*(11+11*sin(dancePhase+1.1));
+  // One flipper gives a deliberate wave; the opposite remains gently balanced.
+  const waveWobble=waveAmp*(14+8*sin(elapsed*15));
+  if(activeSide==='left'){angleL+=waveWobble+fiveAmp*18;angleR-=waveAmp*3;}
+  else{angleR-=waveWobble+fiveAmp*18;angleL+=waveAmp*3;}
+  angleL+=hugAmp*-7;angleR+=hugAmp*7;
+  angleL+=peekAmp*4;angleR-=peekAmp*7;
+  if(held&&(heldZone==='peb-wing-left-hit'||heldZone==='peb-wing-right-hit')){
+   if(heldZone==='peb-wing-left-hit')angleL+=clamp(-dragX*.26-dragY*.16,-16,30);
+   else angleR+=clamp(-dragX*.26+dragY*.16,-30,16);
+  }
+  // Impulse is small and decays before the next user action.
+  if(impulseType==='belly'||impulseType==='highfive'){angleL+=pulse*2;angleR-=pulse*2;}
+  spring('wingL',{r:clamp(angleL,-16,44)});spring('wingR',{r:clamp(angleR,-44,16)});
+  // Alternating in-place toe lifts: at least one foot remains planted at all times.
+  let toeL=0,toeR=0;
+  if(danceAmp){toeL=danceAmp*Math.max(0,sin(dancePhase));toeR=danceAmp*Math.max(0,-sin(dancePhase));}
+  else if(m==='toying'||m==='excited'){toeL=react*.72;}
+  spring('footL',{y:-2*toeL,r:1.6*toeL});
+  spring('footR',{y:-2*toeR,r:-1.6*toeR});
+  spring('tail',{r:clamp(2.5*sin(elapsed*3.1)+danceAmp*6*sin(dancePhase-1)+waveAmp*5*sin(elapsed*9),-11,11)});
+  const eating=m==='eating';
+  spring('fish',{x:eating?-16.5+sin(elapsed*8)*.6:0,y:eating?-13.5+sin(elapsed*9)*1.2:0,
+   r:eating?-10+sin(elapsed*8)*2:0});
+  const toying=m==='toying',flight=toying?clamp(age/1.84,0,1):0;
+  spring('ball',{x:toying?-14*sin(PI*flight):0,y:toying?-35*4*flight*(1-flight):0,r:toying?105*flight:0});
+  pupils.forEach(n=>n.setAttribute('transform',`translate(${clamp(gaze.x,-3.5,3.5).toFixed(2)} ${clamp(gaze.y,-2.5,2.5).toFixed(2)})`));
+  if(elapsed>nextBlink){blinkAt=elapsed;nextBlink=elapsed+1.85+Math.random()*2.3;}
+  const blinkShape=Math.max(0,1-Math.abs(elapsed-blinkAt-.083)/.083);
+  const canBlink=['idle','listening','talking','angry','smug','shy','eating','toying','peeking','curious','stretching','winking'].includes(m);
+  const eyeScale=canBlink?1-blinkShape*.94:1;
+  eyes.forEach(n=>n.setAttribute('transform',`translate(0 111) scale(1 ${eyeScale.toFixed(3)}) translate(0 -111)`));
+  blink.setAttribute('opacity',String(canBlink&&blinkShape>.88?1:0));
+  if(shadow){shadow.setAttribute('rx',(49-.55*react).toFixed(2));shadow.setAttribute('opacity',(.22-.012*react).toFixed(3));}
+  raf=requestAnimationFrame(animate);
+ }
+ function start(){if(disposed||document.hidden||reduced.matches||raf)return;lastTime=0;raf=requestAnimationFrame(animate);}
+ function stop(){if(raf)cancelAnimationFrame(raf);raf=0;lastTime=0;}
+ function motionPref(){stop();if(reduced.matches)reset();else start();}
+ function updatePointer(e){const b=actor.getBoundingClientRect();if(!b.width||!b.height)return;
+  cursor.inside=true;cursor.x=clamp((e.clientX-b.left-b.width*.5)/(b.width*.42),-1,1);
+  cursor.y=clamp((e.clientY-b.top-b.height*.48)/(b.height*.40),-1,1);
+  if(held){dragX=clamp(e.clientX-downX,-78,78);dragY=clamp(e.clientY-downY,-75,75);}}
+ function pointerDown(e){if(e.button!==0)return;held=true;
+  const zone=e.target.closest?.('.hit-zone');heldZone=zone?.id||'body';
+  downX=e.clientX;downY=e.clientY;dragX=dragY=0;updatePointer(e);
+ }
+ function pointerUp(){held=false;heldZone='';dragX=dragY=0;}
+ function pointerLeave(){if(!held)cursor.inside=false;}
+ function pointerEnter(){faceWakeTime=elapsed;}
+ function reactionHandler(e){const d=e.detail||{};
+  impulseAt=elapsed;impulseType=d.type||'';
+  if(d.side==='left'||d.side==='right')activeSide=d.side;
+  else if(d.type==='wave'||d.type==='highfive')activeSide='right';
+  // Repeated taps in the same mood should replay their gesture from frame zero.
+  phaseStart=elapsed;
+  if(d.type==='swipe')cursor.inside=false;
+ }
+ function visibility(){if(document.hidden)stop();else start();}
+ actor.addEventListener('pointermove',updatePointer,{passive:true});
+ actor.addEventListener('pointerdown',pointerDown,{passive:true});
+ actor.addEventListener('pointerup',pointerUp,{passive:true});
+ actor.addEventListener('pointercancel',pointerUp,{passive:true});
+ actor.addEventListener('lostpointercapture',pointerUp,{passive:true});
+ actor.addEventListener('pointerleave',pointerLeave,{passive:true});
+ actor.addEventListener('pointerenter',pointerEnter,{passive:true});
+ window.addEventListener('pebble:react',reactionHandler);
+ document.addEventListener('visibilitychange',visibility);
+ reduced.addEventListener?.('change',motionPref);
+ function dispose(){if(disposed)return;disposed=true;stop();
+  actor.removeEventListener('pointermove',updatePointer);actor.removeEventListener('pointerdown',pointerDown);
+  actor.removeEventListener('pointerup',pointerUp);actor.removeEventListener('pointercancel',pointerUp);
+  actor.removeEventListener('lostpointercapture',pointerUp);
+  actor.removeEventListener('pointerleave',pointerLeave);actor.removeEventListener('pointerenter',pointerEnter);
+  window.removeEventListener('pebble:react',reactionHandler);document.removeEventListener('visibilitychange',visibility);
+  reduced.removeEventListener?.('change',motionPref);
+ }
+ window.addEventListener('pagehide',dispose,{once:true});
+ window.PebbleMotion={version:'1.7-expressive',snapshot:()=>({mood:world.dataset.mood,
+  head:{...state.head},wingL:{...state.wingL},wingR:{...state.wingR},
+  footL:{...state.footL},footR:{...state.footR},tail:{...state.tail},
+  reducedMotion:reduced.matches,running:!!raf}),dispose};
+ if(reduced.matches)reset();else start();
+})();
+</script>
+
+
+<script>
+// Embedded status bridge: home UI may reflect the Talk button's live microphone state.
+(function(){
+ if(!document.documentElement.classList.contains('pet-embedded'))return;
+ const mic=document.getElementById('mic');
+ if(!mic)return;
+ const report=()=>{try{window.parent.postMessage({kind:'pebble-status',micEnabled:mic.getAttribute('aria-pressed')==='true'},'*')}catch(_){}};
+ const observer=new MutationObserver(report);
+ observer.observe(mic,{attributes:true,attributeFilter:['aria-pressed']});
+ window.addEventListener('pagehide',()=>observer.disconnect(),{once:true});
+ report();
+})();
+</script>
+</body></html>

@@ -1,0 +1,19 @@
+SNOOZELOSE v1.1 — ACTUAL CHANGELOG (NOV 21, 2026)
+
+CHANGED: SnoozeLose/PebbleWorld/index.html
+  • Removed Pip (second penguin) and large background penguin markup.
+  • Removed the intro overlay and its cloning script that duplicated Pebble on launch.
+  • Removed duplicate HTML hero CTA; the mission card and native dock remain actionable.
+  • Made the text clearly describe the wake-up challenge.
+  • Removed emoji decoration from main character controls and clarified labels.
+  • Added link to the last-in-cascade visual stylesheet.
+
+ADDED: SnoozeLose/PebbleWorld/css/snoozelose-home-v11.css
+  • Larger responsive WAKE UP. LEVEL UP. typography.
+  • Single-character positioning, clearer glass card, button sizing and responsive adjustments.
+  • Fog, snow/cloud layers and existing interactive articulated mascot retained.
+  • Compact screen adjustments and visual focus styles.
+
+NOT MODIFIED: native alarm logic, wake game rules, stored alarm keys, icon, bundled ringtones, Xcode project metadata.
+NOT CLAIMED: Android support, generative AI, Krillion, baseball or completed four-stage game.
+KNOWN VALIDATION GAP: No Xcode/iPhone run has been performed here. Device QA required.

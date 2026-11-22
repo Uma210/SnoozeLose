@@ -1,0 +1,21 @@
+SnoozeLose v1.3 — Character repair and delight pass
+
+FIXED
+- Expanded Pebble SVG viewBox from 0 0 200 240 to -42 -16 284 270, giving the wing and fish animation headroom.
+- Removed the on-screen Pause Motion button and its event handler. System Reduce Motion preference continues to be honored.
+- Widened the character rendering region, eliminated stage clipping, improved character scale, and constrained overall bounding box on narrow displays.
+- Moved mascot dialogue to a predictable area inside the character stage, preventing it from hiding the face.
+- Refined hierarchy/spacing for headline, mascot, character controls, and alarm CTA.
+- Added five subtle SVG-independent twinkle sprites, gently pulsing sky light, improved cloud drift, and action-triggered particles.
+- Created UI-only sparkle particles with automatic cleanup and a rate limit. These are not gameplay mechanics.
+- Added tactile pressed/playing control feedback.
+- Kept one Pebble mascot, the fog layer, and existing rig-based eyes/wings/feet/fish interactions.
+
+PRESERVED
+- Swift alarm/notification scheduling, games, persistence, sound/haptics and native navigation.
+- Original icon and assets.
+- System Reduce Motion and accessibility focus.
+
+CHECKS
+- JavaScript parse (node --check) and HTML structural/source verification.
+- Full iPhone device test and Xcode compile still required; not claimed verified.
