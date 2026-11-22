@@ -31,12 +31,12 @@ Test sound and vibration with the app closed, the phone locked, and Do Not Distu
 
 ## Run the word game
 
-Install the app dependencies with `npm ci`, then run `npm start`. Open the app in Expo Go for SDK 54 or an SDK 54 development build. Select **Play sample puzzle** for the fixed five-letter sample or **Play a new puzzle** to draw an unused four-, five-, or six-letter word from the bundled list. Both options work offline. Run `npm test` for the game-rule tests.
+Install the app dependencies with `npm ci`, then run `npm start`. Open the app in Expo Go for SDK 54 or an SDK 54 development build. The standalone preview opens directly to the alarm puzzle screen with an unused five-letter word from the bundled list. It works offline. Run `npm test` for the game-rule tests.
 
 ## Connect the word game to the alarm
 
 1. When scheduling a word-game occurrence, choose a stable string ID for that occurrence, then await `prepareWordPuzzle(occurrenceId, selectDatabaseWord)` from `src/word-game/puzzles.js`. Mark the puzzle ready only after this resolves. Preparing the same ID again returns its stored puzzle. Each recurring occurrence needs its own ID.
 2. When that occurrence fires, open `WordPuzzleScreen` with its `occurrenceId`, a display-ready `alarmTime`, and an `onSolved` callback. The screen reads the puzzle and submitted guesses from on-device storage and works without a network connection.
-3. In `onSolved(occurrenceId)`, stop sound and vibration for that occurrence and close the puzzle screen. Make the handler safe to call again for the same ID. If the app is reopened after a correct guess has been saved, the screen reports completion again so the alarm can finish.
+3. In `onSolved(occurrenceId)`, stop sound and vibration for that occurrence. Make the handler safe to call again for the same ID. If the app is reopened after a correct guess has been saved, the screen reports completion again so the alarm can finish. Pass `onWinAnimationComplete(occurrenceId)` to return home after the alarm stops and the win animation finishes.
 
-The offline dictionary contains the four- through six-letter entries from [word-list 4.1.0](https://github.com/sindresorhus/word-list). See the bundled dictionary license.
+The offline dictionary contains the four- through six-letter entries from [word-list 4.1.0](https://github.com/sindresorhus/word-list). New puzzles use only five-letter answers. Previously prepared puzzles keep their original answers. See the bundled dictionary license.

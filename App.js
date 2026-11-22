@@ -1,76 +1,64 @@
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import WordPuzzleScreen from './src/word-game/WordPuzzleScreen';
-import { loadWordPuzzle, prepareWordPuzzle, selectDatabaseWord, SAMPLE_PUZZLE_ID, saveWordPuzzle } from './src/word-game/puzzles';
+import { prepareWordPuzzle, selectDatabaseWord } from './src/word-game/puzzles';
 
 export default function App() {
-  const [current, setCurrent] = useState(null);
-  const [solved, setSolved] = useState(false);
-  const [pending, setPending] = useState(false);
+  const [occurrenceId, setOccurrenceId] = useState(() => `preview:word:${Date.now()}`);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
 
-  async function start(useAi) {
-    setPending(true);
-    setError('');
-    try {
-      const id = useAi ? `preview:word:${Date.now()}` : SAMPLE_PUZZLE_ID;
-      if (useAi) {
-        await prepareWordPuzzle(id, selectDatabaseWord);
-      } else {
-        const sample = await loadWordPuzzle(id);
-        if (!sample || sample.guesses.includes(sample.answer)) {
-          await saveWordPuzzle({ occurrenceId: id, answer: 'crane', guesses: [] });
-        }
-      }
-      setSolved(false);
-      setCurrent(id);
-    } catch (failure) {
-      setError(failure.message);
-    } finally {
-      setPending(false);
-    }
-  }
+  useEffect(() => {
+    if (occurrenceId === null) return;
+    let active = true;
+    prepareWordPuzzle(occurrenceId, selectDatabaseWord).then(
+      () => { if (active) setReady(true); },
+      (failure) => { if (active) setError(failure.message); },
+    );
+    return () => { active = false; };
+  }, [occurrenceId]);
 
   return (
     <SafeAreaProvider>
-      {current && !solved ? (
-        <WordPuzzleScreen occurrenceId={current} onSolved={() => setSolved(true)} />
+      {occurrenceId === null ? (
+        <SafeAreaView style={styles.loading}>
+          <Text accessibilityRole="header" style={styles.homeTitle}>Snooze Loose</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setReady(false);
+              setError('');
+              setOccurrenceId(`preview:word:${Date.now()}`);
+            }}
+            style={styles.playButton}
+          >
+            <Text style={styles.playLabel}>Play again</Text>
+          </Pressable>
+        </SafeAreaView>
+      ) : ready ? (
+        <WordPuzzleScreen occurrenceId={occurrenceId} onWinAnimationComplete={() => setOccurrenceId(null)} />
       ) : (
-        <SafeAreaView style={styles.safe}>
-          <View style={styles.panel}>
-            <Text style={styles.brand}>SnoozeLose</Text>
-            <Text accessibilityRole="header" style={styles.heading}>{solved ? 'Puzzle solved' : 'Word puzzle'}</Text>
-            <Text style={styles.copy}>{solved ? 'Choose another preview to keep playing.' : 'Try the game your alarm will open.'}</Text>
-            {solved && <PreviewButton label="Back to preview" onPress={() => { setCurrent(null); setSolved(false); }} />}
-            {!solved && (
-              <>
-                <PreviewButton label="Play sample puzzle" disabled={pending} onPress={() => start(false)} />
-                <PreviewButton label={pending ? 'Preparing…' : 'Play a new puzzle'} disabled={pending} onPress={() => start(true)} />
-              </>
-            )}
-            {!!error && <Text accessibilityRole="alert" style={styles.copy}>{error}</Text>}
-          </View>
+        <SafeAreaView style={styles.loading}>
+          {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : (
+            <ActivityIndicator accessibilityLabel="Preparing puzzle" color="#333F48" />
+          )}
         </SafeAreaView>
       )}
     </SafeAreaProvider>
   );
 }
 
-function PreviewButton({ label, onPress, disabled }) {
-  return (
-    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={styles.button}>
-      <Text style={styles.buttonText}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#E0FFFF', justifyContent: 'center', alignItems: 'center', padding: 22 },
-  panel: { width: '100%', maxWidth: 360, padding: 24, gap: 12, borderRadius: 18, backgroundColor: '#F6FFFF', borderWidth: 1, borderColor: '#B0BACF' },
-  brand: { color: '#46348F', fontWeight: '800', fontSize: 16 },
-  heading: { color: '#1D2141', fontWeight: '800', fontSize: 34 },
-  copy: { color: '#384565', fontSize: 16, marginBottom: 5 },
-  button: { alignItems: 'center', backgroundColor: '#6A5ACD', padding: 14, borderRadius: 10 },
-  buttonText: { color: '#FFFFFF', fontWeight: '800', fontSize: 16 },
+  error: { color: '#18232C' },
+  homeTitle: { color: '#18232C', fontSize: 26, fontWeight: '800', marginBottom: 20 },
+  playButton: { backgroundColor: '#333F48', borderRadius: 10, padding: 14 },
+  playLabel: { color: '#FFFFFF', fontWeight: '700' },
+  loading: {
+    flex: 1,
+    backgroundColor: '#A2B8C6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 22,
+  },
 });

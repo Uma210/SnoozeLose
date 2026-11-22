@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import PuzzleHeader from './PuzzleHeader';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { keyboardMarks, isWord, scoreGuess, MAX_GUESSES } from './rules';
 import { loadWordPuzzle, saveWordPuzzle } from './puzzles';
@@ -11,18 +12,20 @@ export default function WordPuzzleScreen(props) {
   return <PuzzleSession key={props.occurrenceId} {...props} />;
 }
 
-function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
+function PuzzleSession({ occurrenceId, alarmTime, onSolved, onWinAnimationComplete }) {
   const [puzzle, setPuzzle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [completionError, setCompletionError] = useState(false);
+  const [alarmStopped, setAlarmStopped] = useState(false);
+  const [celebrated, setCelebrated] = useState(false);
   const busy = useRef(false);
   const { width, height } = useWindowDimensions();
   const wordLength = puzzle?.answer.length ?? 5;
   const boardWidth = width - 28 - (wordLength - 1) * 5;
-  const tile = Math.min(53, Math.floor(boardWidth / wordLength), Math.max(34, Math.floor((height - 315) / MAX_GUESSES)));
+  const tile = Math.min(53, Math.floor(boardWidth / wordLength), Math.max(34, Math.floor((height - 382) / MAX_GUESSES)));
   const solved = Boolean(puzzle?.guesses.includes(puzzle.answer));
   const exhausted = puzzle?.guesses.length === MAX_GUESSES && !solved;
 
@@ -45,22 +48,27 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
     return () => { mounted = false; };
   }, [occurrenceId]);
 
-  async function reportSolved() {
+  const completion = useRef(onSolved);
+  completion.current = onSolved;
+  const returnHome = useRef(onWinAnimationComplete);
+  returnHome.current = onWinAnimationComplete;
+  const reportSolved = useCallback(async () => {
     setCompletionError(false);
     try {
-      await onSolved(occurrenceId);
+      await completion.current?.(occurrenceId);
+      setAlarmStopped(true);
     } catch {
       setCompletionError(true);
     }
-  }
+  }, [occurrenceId]);
 
-  const completion = useRef(onSolved);
-  completion.current = onSolved;
   useEffect(() => {
-    if (solved) {
-      Promise.resolve().then(() => completion.current(occurrenceId)).catch(() => setCompletionError(true));
-    }
-  }, [solved, occurrenceId]);
+    if (solved) void reportSolved();
+  }, [solved, reportSolved]);
+
+  useEffect(() => {
+    if (alarmStopped && celebrated) returnHome.current?.(occurrenceId);
+  }, [alarmStopped, celebrated, occurrenceId]);
 
   async function persist(guesses) {
     if (busy.current) return;
@@ -97,18 +105,16 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
   }
 
   const marks = puzzle ? keyboardMarks(puzzle.guesses, puzzle.answer) : {};
+  const guessCount = puzzle?.guesses.length ?? 0;
+  const mood = solved ? 'happy' : guessCount ? 'angry' : 'calm';
   const status = message || (exhausted ? 'Six guesses used. Try the same word on a fresh board.' : '');
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.brand}>SnoozeLose</Text>
-          {alarmTime ? <Text style={styles.time}>{alarmTime}</Text> : null}
-        </View>
-        <Text accessibilityRole="header" style={styles.title}>{alarmTime ? 'Solve to stop alarm' : 'Guess the word'}</Text>
+        <PuzzleHeader alarmTime={alarmTime} mood={mood} guessCount={guessCount} onCelebrated={setCelebrated} />
         {puzzle && <Text style={styles.instructions}>Find the {wordLength}-letter word in six guesses.</Text>}
-        {loading && <ActivityIndicator color="#6A5ACD" style={styles.loading} />}
+        {loading && <ActivityIndicator color="#333F48" style={styles.loading} />}
         {!puzzle && !loading && <Text accessibilityRole="alert" style={styles.status}>{message}</Text>}
         {puzzle && (
           <>
@@ -129,7 +135,7 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
                           accessibilityLabel={letter ? `${letter}, ${MARK_LABEL[mark] ?? 'unsubmitted'}` : 'Empty tile'}
                           style={[styles.tile, { width: tile, height: tile }, letter && styles.filled, styles[mark]]}
                         >
-                          <Text style={[styles.letter, mark && mark !== 'present' && styles.markedLetter]}>{letter}</Text>
+                          <Text style={[styles.letter, (!mark || mark === 'absent') && styles.lightLetter]}>{letter}</Text>
                         </View>
                       );
                     })}
@@ -159,7 +165,7 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
                         onPress={() => handleKey(key)}
                         style={({ pressed }) => [styles.key, wide && styles.wideKey, styles[mark], pressed && styles.pressed]}
                       >
-                        <Text style={[styles.keyText, mark === 'present' && styles.darkKeyText, wide && styles.wideText]}>{key === 'Delete' ? '⌫' : key}</Text>
+                        <Text style={[styles.keyText, (!mark || mark === 'absent') && styles.lightLetter, wide && styles.wideText]}>{key === 'Delete' ? '⌫' : key}</Text>
                       </Pressable>
                     );
                   })}
@@ -176,38 +182,33 @@ function PuzzleSession({ occurrenceId, alarmTime, onSolved }) {
 function Action({ label, onPress, disabled }) {
   return (
     <Pressable accessibilityRole="button" style={styles.action} onPress={onPress} disabled={disabled}>
-      <Text style={styles.keyText}>{label}</Text>
+      <Text style={[styles.keyText, styles.lightLetter]}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#E0FFFF' },
+  safe: { flex: 1, backgroundColor: '#A2B8C6' },
   content: { width: '100%', maxWidth: 460, alignSelf: 'center', paddingHorizontal: 14, paddingVertical: 14 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  brand: { color: '#46348F', fontWeight: '800', fontSize: 16 },
-  time: { color: '#263555', fontSize: 15, fontWeight: '700' },
-  title: { color: '#1D2141', fontSize: 29, fontWeight: '800', textAlign: 'center' },
-  instructions: { textAlign: 'center', color: '#384565', marginTop: 5, marginBottom: 16 },
+  instructions: { textAlign: 'center', color: '#101A20', marginTop: 5, marginBottom: 16 },
   loading: { margin: 24 },
   board: { gap: 5, alignItems: 'center' },
   tiles: { flexDirection: 'row', gap: 5 },
-  tile: { borderWidth: 1, borderColor: '#8998AB', borderRadius: 8, backgroundColor: '#F6FFFF', alignItems: 'center', justifyContent: 'center' },
-  filled: { borderColor: '#6A5ACD', borderWidth: 2 },
-  letter: { color: '#1D2141', fontSize: 24, fontWeight: '800' },
-  markedLetter: { color: '#FFFFFF' },
-  exact: { backgroundColor: '#22734E', borderColor: '#22734E' },
-  present: { backgroundColor: '#F4CA59', borderColor: '#A98118' },
-  absent: { backgroundColor: '#55586B', borderColor: '#55586B' },
+  tile: { borderWidth: 1, borderColor: '#BDD0DA', borderRadius: 8, backgroundColor: '#333F48', alignItems: 'center', justifyContent: 'center' },
+  filled: { borderColor: '#FFDAB9', borderWidth: 2 },
+  letter: { color: '#101A20', fontSize: 24, fontWeight: '800' },
+  lightLetter: { color: '#FFFFFF' },
+  exact: { backgroundColor: '#008B8B', borderColor: '#008B8B' },
+  present: { backgroundColor: '#FFDAB9', borderColor: '#FFDAB9' },
+  absent: { backgroundColor: '#DC143C', borderColor: '#DC143C' },
   feedback: { minHeight: 40, justifyContent: 'center', alignItems: 'center', paddingVertical: 4 },
-  status: { color: '#29234E', textAlign: 'center', fontWeight: '600' },
-  action: { backgroundColor: '#6A5ACD', borderRadius: 10, padding: 12, marginTop: 6 },
+  status: { color: '#101A20', textAlign: 'center', fontWeight: '600' },
+  action: { backgroundColor: '#333F48', borderRadius: 10, padding: 12, marginTop: 6 },
   keyboard: { gap: 5 },
   keyRow: { flexDirection: 'row', gap: 3, justifyContent: 'center' },
-  key: { flex: 1, maxWidth: 42, minHeight: 46, backgroundColor: '#6A5ACD', borderRadius: 7, justifyContent: 'center', alignItems: 'center' },
+  key: { flex: 1, maxWidth: 42, minHeight: 46, backgroundColor: '#333F48', borderRadius: 7, justifyContent: 'center', alignItems: 'center' },
   wideKey: { flex: 1.45, maxWidth: 55 },
-  keyText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
-  darkKeyText: { color: '#1D2141' },
+  keyText: { color: '#101A20', fontSize: 15, fontWeight: '800' },
   wideText: { fontSize: 12 },
   pressed: { opacity: 0.72 },
 });

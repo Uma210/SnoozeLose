@@ -1,13 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isWord, pickUnusedWord } from './rules';
+import { isWord, pickUnusedWord, WORD_LENGTH } from './rules';
 
 export { pickUnusedWord as selectDatabaseWord };
 
 const PREFIX = 'snoozelose:word:v1:';
-export const SAMPLE_PUZZLE_ID = 'preview:sample';
-const keyFor = (id) => id === SAMPLE_PUZZLE_ID
-  ? 'snoozelose:word-sample:v1'
-  : PREFIX + encodeURIComponent(id);
+const keyFor = (id) => PREFIX + encodeURIComponent(id);
 let preparation = Promise.resolve();
 
 export async function loadWordPuzzle(occurrenceId) {
@@ -28,8 +25,8 @@ export function prepareWordPuzzle(occurrenceId, generateWord) {
     const records = await AsyncStorage.multiGet(keys);
     const excluded = records.flatMap(([, value]) => value ? [JSON.parse(value).answer] : []);
     const answer = await generateWord(excluded);
-    if (!isWord(answer) || excluded.includes(answer)) {
-      throw new Error('The generator did not return a new dictionary word.');
+    if (!isWord(answer) || answer.length !== WORD_LENGTH || excluded.includes(answer)) {
+      throw new Error('The generator did not return a new five-letter dictionary word.');
     }
 
     const puzzle = { occurrenceId, answer, guesses: [] };
