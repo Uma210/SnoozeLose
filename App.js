@@ -93,20 +93,16 @@ export default function App() {
   );
 }
 
-function PreviewButton({ label, onPress, disabled }) {
-  return (
-    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={styles.button}>
-      <Text style={styles.buttonText}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#E0FFFF', justifyContent: 'center', alignItems: 'center', padding: 22 },
-  panel: { width: '100%', maxWidth: 360, padding: 24, gap: 12, borderRadius: 18, backgroundColor: '#F6FFFF', borderWidth: 1, borderColor: '#B0BACF' },
-  brand: { color: '#46348F', fontWeight: '800', fontSize: 16 },
-  heading: { color: '#1D2141', fontWeight: '800', fontSize: 34 },
-  copy: { color: '#384565', fontSize: 16, marginBottom: 5 },
-  button: { alignItems: 'center', backgroundColor: '#6A5ACD', padding: 14, borderRadius: 10 },
-  buttonText: { color: '#FFFFFF', fontWeight: '800', fontSize: 16 },
+  error: { color: '#18232C' },
+  homeTitle: { color: '#18232C', fontSize: 26, fontWeight: '800', marginBottom: 20 },
+  playButton: { backgroundColor: '#333F48', borderRadius: 10, padding: 14 },
+  playLabel: { color: '#FFFFFF', fontWeight: '700' },
+  loading: {
+    flex: 1,
+    backgroundColor: '#A2B8C6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 22,
+  },
 });
