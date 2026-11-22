@@ -1,42 +1,38 @@
-# SnoozeLose
+# SnoozeLose — iOS Alarm + Pebble (v1.6 Natural Rig)
 
-SnoozeLose is a planned iPhone and Android alarm app. When an alarm rings, it reveals one puzzle. Completing that puzzle is the only dismissal action in the app. There is no snooze.
+SnoozeLose is a SwiftUI iPhone alarm project with an interactive, animated penguin companion, **Pebble**. The project includes its Xcode sources, bundled web experience, graphics, sounds, and project documentation. This repository combines the original **v16 Stable Side Rails** app with the updated **Pebble Fluid Pet v1.6 Natural Rig** character.
 
-## Alarm and puzzle flow
+## Run the iPhone app
 
-1. The user sets a one-time or recurring alarm.
-2. The app prepares a distinct puzzle for each scheduled occurrence ahead of time and stores it on the device. For the word game, it selects an unused answer from the bundled English word list. A Monday alarm created Sunday evening gets its puzzle Sunday evening. Multiple alarms on the same day each get their own puzzle. Recurring alarms need a new puzzle prepared in advance for each occurrence.
-3. At the scheduled time, the alarm sounds and vibrates, and the puzzle becomes available. The wake-up flow uses the stored puzzle so it can run offline.
-4. The app checks the solution and dismisses the alarm when the puzzle is complete.
+1. On a Mac, install a recent version of **Xcode** with the iOS SDK.
+2. Open **`SnoozeLose.xcodeproj`** (the project file in this folder).
+3. In Xcode, select the **SnoozeLose** app target and your desired iPhone simulator or device. Configure **Signing & Capabilities** for your Apple team if needed.
+4. Build and run with **Cmd + R**.
 
-## Team work
+The main app is under `SnoozeLose/`. SwiftUI and the alarm logic stay in their respective Swift source files. The companion web files and their assets are bundled under `SnoozeLose/PebbleWorld/`.
 
-Each of the four contributors owns one game. Assign owners before game development begins.
+## Preview the web UI separately
 
-| Game | Scope |
-| --- | --- |
-| Wordle-style word guessing | Original interface and puzzle content |
-| Mini crossword | Original interface, grids, and clues |
-| Krillion | Game instructions to follow |
-| Percptile | Game instructions to follow |
+From the repository root, run:
 
-Use a branch per game and open pull requests against `main` once the repository has a shared remote. Coordinate on how each game receives a prepared puzzle and reports completion before integrating with the alarm flow.
+```sh
+cd SnoozeLose/PebbleWorld
+python3 -m http.server 8000
+```
 
-## Platform behavior to verify
+Open **http://localhost:8000** for the home interface. You can also visit **http://localhost:8000/pebble-pet.html** for Pebble’s standalone playroom. This is a **browser preview** of the web experience; native iOS alarm functions require the Xcode app.
 
-Test sound and vibration with the app closed, the phone locked, and Do Not Disturb or Focus enabled. Apple’s AlarmKit supports alarms that override Focus and Silent mode and provides system-level Stop behavior. Confirm how that affects puzzle-only dismissal before committing to the iPhone experience. Android supports exact clock alarms, with delivery and presentation subject to permissions and device settings.
+## How the Pebble integration works
 
-- [Apple AlarmKit documentation](https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-with-alarmkit)
-- [Android exact alarm documentation](https://developer.android.com/develop/background-work/services/alarms)
+- `SnoozeLose/PebbleWorld/index.html` displays Pebble in an embedded iframe using `pebble-pet.html?embedded=1`.
+- `SnoozeLose/PebbleWorld/pebble-pet.html` is the **updated v1.6 natural-rig** character, with grounded feet, articulated head/flippers, expressions, and playful interactions.
+- `SnoozeLose/PebbleWorld/js/pebble-home-integration.js` relays presentation-only commands to the pet. Native Swift code controls alarms; the character cannot alter alarm state.
+- Microphone interaction requires permission and a compatible secure context. Speech and audio support depend on browser/WKWebView platform behavior.
 
-## Run the word game
+## Project documentation
 
-Install the app dependencies with `npm ci`, then run `npm start`. Open the app in Expo Go for SDK 54 or an SDK 54 development build. The standalone preview opens directly to the alarm puzzle screen with an unused five-letter word from the bundled list. It works offline. Run `npm test` for the game-rule tests.
+The original PRD, integration notes, change logs, and QA reports remain included. Some original reports refer to older versions: refer to this README for the packaged Pebble version. No third-party services or install-time web build step are required for the included character assets.
 
-## Connect the word game to the alarm
+## Verification limits
 
-1. When scheduling a word-game occurrence, choose a stable string ID for that occurrence, then await `prepareWordPuzzle(occurrenceId, selectDatabaseWord)` from `src/word-game/puzzles.js`. Mark the puzzle ready only after this resolves. Preparing the same ID again returns its stored puzzle. Each recurring occurrence needs its own ID.
-2. When that occurrence fires, open `WordPuzzleScreen` with its `occurrenceId`, a display-ready `alarmTime`, and an `onSolved` callback. The screen reads the puzzle and submitted guesses from on-device storage and works without a network connection.
-3. In `onSolved(occurrenceId)`, stop sound and vibration for that occurrence. Make the handler safe to call again for the same ID. If the app is reopened after a correct guess has been saved, the screen reports completion again so the alarm can finish. Pass `onWinAnimationComplete(occurrenceId)` to return home after the alarm stops and the win animation finishes.
-
-The offline dictionary contains the four- through six-letter entries from [word-list 4.1.0](https://github.com/sindresorhus/word-list). New puzzles use only five-letter answers. Previously prepared puzzles keep their original answers. See the bundled dictionary license.
+This package has been assembled and statically checked for local web asset references, embedded JavaScript syntax, and the presence of the Xcode project/source files. **An Xcode build, iPhone runtime, permission flow, and alarm reliability have not been verified in this environment**. Test these before submitting or presenting the app as production-ready.
